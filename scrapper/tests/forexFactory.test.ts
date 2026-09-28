@@ -63,7 +63,7 @@ describe("ForexFactoryParser", () => {
       source: "metalsmine",
       metalsImpact: "medium",
     });
-    expect(parseExport(exportJson)[0 as never] ?? parseExport(exportJson).events[0]).toMatchObject({
+    expect(parseExport(exportJson).events[0]).toMatchObject({
       source: "forexfactory",
       metalsImpact: null,
     });
