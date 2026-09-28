@@ -5,6 +5,8 @@ import type { ApiStatus, MarketAnalysis, MarketSnapshot } from "@/types/market";
 export const mockSnapshot: MarketSnapshot = {
   symbol: "XAUUSD",
   price: 2648.35,
+  previousPrice: 2660.75,
+  trend: "down",
   changeAbsolute: -12.4,
   changePercent: -0.47,
   macroBias: "neutral",

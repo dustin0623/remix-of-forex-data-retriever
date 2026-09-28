@@ -15,7 +15,7 @@ function atOffset(dayOffset: number, hhmm: string): string {
   return d.toISOString();
 }
 
-type Seed = Omit<EconomicEvent, "id" | "datetime"> & { dayOffset: number };
+type Seed = Omit<EconomicEvent, "id" | "datetime" | "status"> & { dayOffset: number };
 
 const seeds: Seed[] = [
   {
@@ -341,6 +341,7 @@ export const mockEvents: EconomicEvent[] = seeds.map((seed, index) => {
   const { dayOffset, ...rest } = seed;
   return {
     ...rest,
+    status: rest.actual ? "RELEASED" : "UPCOMING",
     id: `evt-${String(index + 1).padStart(3, "0")}`,
     datetime: rest.time === "All Day" ? atOffset(dayOffset, "00:00") : atOffset(dayOffset, rest.time),
   };
@@ -351,42 +352,31 @@ export const mockChanges: EventChange[] = [
     id: "chg-001",
     eventId: "evt-017",
     eventTitle: "Final GDP q/q",
+    changeType: "actual_released",
     field: "actual",
-    from: null,
-    to: "3.0%",
+    previousValue: null,
+    newValue: "3.0%",
     detectedAt: atOffset(-1, "12:31"),
   },
   {
     id: "chg-002",
     eventId: "evt-009",
     eventTitle: "Non-Farm Employment Change",
+    changeType: "forecast_revised",
     field: "forecast",
-    from: "160K",
-    to: "168K",
+    previousValue: "160K",
+    newValue: "168K",
     detectedAt: atOffset(-1, "16:05"),
   },
   {
     id: "chg-003",
     eventId: "evt-018",
     eventTitle: "Crude Oil Inventories",
+    changeType: "actual_released",
     field: "actual",
-    from: null,
-    to: "-4.5M",
+    previousValue: null,
+    newValue: "-4.5M",
     detectedAt: atOffset(-1, "14:31"),
   },
 ];
 
-/** Deterministic simulated release value used by the "Simulate Release" action. */
-export function simulateActual(event: EconomicEvent): string {
-  const base = event.forecast ?? event.previous;
-  if (!base) return "Released — no numeric value";
-  const match = base.match(/^(-?\d+(?:\.\d+)?)(.*)$/);
-  if (!match) return base;
-  const numeric = match[1] ?? "0";
-  const value = Number(numeric);
-  const suffix = match[2] ?? "";
-  const drift = ((event.id.charCodeAt(event.id.length - 1) % 7) - 3) / 10;
-  const next = value * (1 + drift * 0.12) + drift;
-  const decimals = numeric.includes(".") ? (numeric.split(".")[1]?.length ?? 0) : 0;
-  return `${next.toFixed(decimals)}${suffix}`;
-}

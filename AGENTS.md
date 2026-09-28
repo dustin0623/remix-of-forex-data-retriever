@@ -13,7 +13,10 @@
 
 - All market data flows through `src/services/marketService.ts` (React Query `queryOptions`), which
   currently resolves from `src/mock/` — so Phase 2 can swap in the `/scrapper` API without UI changes.
-- Domain types live in `src/types/market.ts`; global client state is Zustand in `src/stores/` (settings,
-  simulated releases) — kept out of React Query because it is user preference, not server data.
+- Domain types live in `src/types/market.ts`; global client state is Zustand in `src/stores/` (settings
+  only) — kept out of React Query because it is user preference, not server data.
 - Shared market UI lives in `src/components/market/`; the shell/nav lives in `src/layouts/AppShell.tsx`
   and is rendered once from `src/routes/__root.tsx`.
+- Components read data only via `src/services/marketService.ts` → `src/services/api/apiClient.ts` (`MarketApi`
+  interface); the mock implementation delegates to `src/services/mock/simulationService.ts`, which holds
+  session-persisted event state + change log, so Phase 3 swaps in the real API by adding one implementation.

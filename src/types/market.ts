@@ -2,6 +2,8 @@ export type Impact = "low" | "medium" | "high";
 export type Currency = "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "NZD" | "CNY";
 export type Relevance = "none" | "low" | "medium" | "high";
 export type Bias = "bullish" | "bearish" | "neutral";
+export type EventStatus = "UPCOMING" | "RELEASED" | "UPDATED";
+export type Trend = "up" | "down" | "sideways";
 
 /**
  * Field shape intentionally mirrors a Forex Factory calendar row
@@ -17,6 +19,8 @@ export interface EconomicEvent {
   currency: Currency;
   title: string;
   impact: Impact;
+  /** UPCOMING until an actual is published; UPDATED after any later revision. */
+  status: EventStatus;
   actual: string | null;
   forecast: string | null;
   previous: string | null;
@@ -30,6 +34,8 @@ export interface EconomicEvent {
 export interface MarketSnapshot {
   symbol: string;
   price: number;
+  previousPrice: number;
+  trend: Trend;
   changeAbsolute: number;
   changePercent: number;
   macroBias: Bias;
@@ -70,12 +76,22 @@ export interface ApiStatus {
   uptimeSeconds: number;
 }
 
+export type ChangeType = "actual_released" | "actual_revised" | "forecast_revised";
+
 export interface EventChange {
   id: string;
   eventId: string;
   eventTitle: string;
+  changeType: ChangeType;
   field: "actual" | "forecast" | "previous";
-  from: string | null;
-  to: string | null;
+  previousValue: string | null;
+  newValue: string | null;
   detectedAt: string;
+}
+
+export interface TimelinePoint {
+  time: string;
+  price: number;
+  /** Set when the point marks a simulated release. */
+  label: string | null;
 }
