@@ -15,7 +15,11 @@ function atOffset(dayOffset: number, hhmm: string): string {
   return d.toISOString();
 }
 
-type Seed = Omit<EconomicEvent, "id" | "datetime" | "status"> & { dayOffset: number };
+type Seed = Omit<EconomicEvent, "id" | "datetime" | "status" | "feed"> & {
+  dayOffset: number;
+  /** Overrides the derived feed attribution for metals-only events. */
+  feed?: EventSource;
+};
 
 const seeds: Seed[] = [
   {
