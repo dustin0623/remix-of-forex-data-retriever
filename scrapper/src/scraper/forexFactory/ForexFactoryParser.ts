@@ -21,12 +21,15 @@ export function normalizeImpact(raw: string): FFImpact {
 
 const slug = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-/** Deterministic id: source + date + currency + event + time (never array indexes). */
+/**
+ * Deterministic id from date + currency + event + time (never array indexes and
+ * never the feed name, so the same event in both feeds resolves to one id).
+ */
 export function buildEventId(currency: string, event: string, datetimeUtc: string): string {
   const date = datetimeUtc.slice(0, 10);
   const time = datetimeUtc.slice(11, 16);
   const hash = createHash("sha1")
-    .update(["forexfactory", date, currency.toUpperCase(), normalizeWhitespace(event).toLowerCase(), time].join("|"))
+    .update(["faireconomy", date, currency.toUpperCase(), normalizeWhitespace(event).toLowerCase(), time].join("|"))
     .digest("hex")
     .slice(0, 10);
   return `ff-${date}-${slug(currency)}-${hash}`;
