@@ -31,6 +31,8 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS idx_events_datetime ON events(datetime);
 CREATE INDEX IF NOT EXISTS idx_events_currency_impact ON events(currency, impact);
 CREATE INDEX IF NOT EXISTS idx_events_gold ON events(gold_relevance);
+CREATE INDEX IF NOT EXISTS idx_events_source ON events(source);
+
 
 CREATE TABLE IF NOT EXISTS event_snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
