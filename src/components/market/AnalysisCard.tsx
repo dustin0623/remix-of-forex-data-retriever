@@ -50,11 +50,13 @@ function List({ title, items }: { title: string; items: string[] }) {
 export function AnalysisCard({
   analysis,
   loading,
+  needsKey = false,
   title = "AI Market Overview",
   showUsdContext = false,
 }: {
   analysis?: MarketAnalysis | null | undefined;
   loading?: boolean | undefined;
+  needsKey?: boolean | undefined;
   title?: string | undefined;
   showUsdContext?: boolean | undefined;
 }) {
@@ -63,7 +65,7 @@ export function AnalysisCard({
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <h2 className="text-sm font-semibold text-foreground">{title}</h2>
-          <SimulatedTag label="Simulated AI Analysis" />
+          {analysis?.simulated ? <SimulatedTag label="Simulated AI Analysis" /> : null}
         </div>
         {analysis ? (
           <div className="flex items-center gap-3">
