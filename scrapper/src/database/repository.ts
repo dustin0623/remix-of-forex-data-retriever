@@ -42,6 +42,7 @@ export interface EventRepository {
 
 type EventRow = {
   id: string; source: string; event: string; currency: string; impact: string; datetime: string;
+  metals_impact: string | null;
   actual: string | null; forecast: string | null; previous: string | null; gold_relevance: string;
   usd_relevance: string; status: string; description: string; content_hash: string;
   first_seen_at: string; last_seen_at: string; updated_at: string;
@@ -61,6 +62,7 @@ const rowToEvent = (r: EventRow): EconomicEvent => ({
   goldRelevance: r.gold_relevance as EconomicEvent["goldRelevance"],
   usdRelevance: r.usd_relevance as EconomicEvent["usdRelevance"],
   source: r.source,
+  metalsImpact: (r.metals_impact as EconomicEvent["metalsImpact"]) ?? null,
   description: r.description,
   history: [],
 });
