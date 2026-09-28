@@ -127,3 +127,5 @@ export function currentAiConfig() {
   return apiKey ? { provider: s.aiProvider, apiKey, model: s.aiModels[s.aiProvider] || AI_PROVIDERS[s.aiProvider].defaultModel } : null;
 }
 export const useAiConfigured = () => useSettingsStore((s) => Boolean(s.aiKeys[s.aiProvider]));
+export const useMyfxbookConfigured = () =>
+  useSettingsStore((s) => Boolean(s.myfxbookEmail && s.myfxbookPassword));
