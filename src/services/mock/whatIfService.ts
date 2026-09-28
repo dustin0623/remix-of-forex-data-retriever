@@ -9,7 +9,7 @@ import type {
 } from "@/types/market";
 
 /**
- * SIMULATION ENGINE — frontend only, no network.
+ * WHAT-IF ENGINE — frontend only, no network.
  *
  * Behaves like a live Forex Factory-style calendar: events move from UPCOMING
  * to RELEASED (and UPDATED on revision), every mutation is diffed into a
@@ -226,7 +226,7 @@ function baseline(hour: number): number {
   return PREVIOUS_CLOSE - 1.1 * hour + 6.5 * Math.sin(hour / 2.6) + 2.8 * Math.sin(hour * 1.9 + 1.3);
 }
 
-/** Gold reaction to a simulated USD data surprise (strong USD data → gold lower). */
+/** Gold reaction to a what-if USD data surprise (strong USD data → gold lower). */
 function releaseImpact(change: EventChange): number {
   const event = baselineEvents.find((e) => e.id === change.eventId);
   if (!event || event.currency !== "USD" || event.goldRelevance === "none") return 0;

@@ -16,12 +16,12 @@ export const Route = createFileRoute("/events/$id")({
       { title: "Event Details — Forex Market Intelligence" },
       {
         name: "description",
-        content: "Simulated economic event detail with forecast, previous values and a release simulator.",
+        content: "Economic event detail with forecast, previous values and what-if release testing.",
       },
       { property: "og:title", content: "Event Details — Forex Market Intelligence" },
       {
         property: "og:description",
-        content: "Inspect a simulated economic release and trigger a mock data update.",
+        content: "Inspect an economic release and try a what-if outcome.",
       },
     ],
   }),
@@ -58,14 +58,14 @@ function EventDetails() {
   }
 
   if (isError) {
-    return <EmptyState title="Couldn't load this event" description="The simulation layer did not respond." />;
+    return <EmptyState title="Couldn't load this event" description="The calendar feed did not respond." />;
   }
 
   if (!event) {
     return (
       <EmptyState
         title="Event not found"
-        description="This simulated event id does not exist. Return to the calendar to pick another."
+        description="This event id does not exist. Return to the calendar to pick another."
       />
     );
   }
@@ -85,7 +85,7 @@ function EventDetails() {
         actions={
           <div className="flex items-center gap-2">
             <ImpactBadge impact={event.impact} />
-            <SourceTag label="Simulated data" />
+            <SourceTag label="What-if mode" />
           </div>
         }
       />
@@ -118,7 +118,7 @@ function EventDetails() {
             onClick={() =>
               release.mutate(event.id, {
                 onSuccess: ({ change }) =>
-                  toast.success("Simulated release applied", {
+                  toast.success("What-if release applied", {
                     description: `${event.title}: actual ${change.newValue}`,
                   }),
                 onError: (e) => toast.error(e.message),
@@ -126,7 +126,7 @@ function EventDetails() {
             }
           >
             <Play className="size-4" aria-hidden />
-            Simulate release
+            What-if release
           </Button>
           <Button
             variant="outline"
@@ -142,17 +142,17 @@ function EventDetails() {
             }
           >
             <PencilLine className="size-4" aria-hidden />
-            {event.actual !== null ? "Simulate revision" : "Simulate forecast change"}
+            {event.actual !== null ? "What-if revision" : "What-if forecast change"}
           </Button>
           <Button
             variant="ghost"
             disabled={busy}
             onClick={() =>
-              reset.mutate(undefined, { onSuccess: () => toast.success("Simulation reset for all events") })
+              reset.mutate(undefined, { onSuccess: () => toast.success("What-if changes cleared") })
             }
           >
             <RotateCcw className="size-4" aria-hidden />
-            Reset simulation
+            Clear what-ifs
           </Button>
           <p className="text-xs text-muted-foreground">
             Generates a local value only. No external request is made.
@@ -161,7 +161,7 @@ function EventDetails() {
       </section>
 
       <section className="panel p-5">
-        <h2 className="text-sm font-semibold">Historical prints (simulated)</h2>
+        <h2 className="text-sm font-semibold">Historical prints (sample)</h2>
         {event.history.length === 0 ? (
           <div className="mt-4">
             <EmptyState

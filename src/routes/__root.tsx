@@ -83,7 +83,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Forex Market Intelligence" },
       {
         name: "description",
-        content: "Simulated Forex macro calendar, gold analysis and API workbench.",
+        content: "Real Forex Factory + MetalsMine calendar, live gold price, gold analysis and API workbench.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

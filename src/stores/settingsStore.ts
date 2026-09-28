@@ -33,7 +33,7 @@ export const AI_PROVIDERS: Record<AiProvider, { label: string; defaultModel: str
 };
 
 export interface SettingsState {
-  /** SIMULATION = real scraped calendar + local what-if overrides; LIVE = /scrapper API. */
+  /** DIRECT = real calendar fetched directly + local what-if overrides; LIVE = /scrapper API. */
   dataSource: DataSource;
   directMode: boolean;
   theme: "dark" | "system";

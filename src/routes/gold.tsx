@@ -191,7 +191,7 @@ function GoldPage() {
           events={goldEvents}
           loading={events.isLoading}
           showDate
-          emptyTitle="No gold-relevant events in the simulated window"
+          emptyTitle="No gold-relevant events this week"
         />
       </section>
     </>

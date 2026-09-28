@@ -9,7 +9,7 @@ import { realSnapshot, realTimeline } from "./goldPrice";
 import type { MarketApi } from "./types";
 
 /**
- * Simulation implementation: the baseline is the REAL Forex Factory + MetalsMine
+ * Direct feed implementation: the baseline is the REAL Forex Factory + MetalsMine
  * calendar (fetched server-side); what-if releases/revisions stay local overrides.
  */
 

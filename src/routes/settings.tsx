@@ -28,12 +28,12 @@ export const Route = createFileRoute("/settings")({
       { title: "Settings — Forex Market Intelligence" },
       {
         name: "description",
-        content: "Simulation mode, theme, planned API endpoint and AI provider status.",
+        content: "Data source, Scrapper API connection, theme and AI keys.",
       },
       { property: "og:title", content: "Settings — Forex Market Intelligence" },
       {
         property: "og:description",
-        content: "Configure local preferences for the simulated Forex intelligence workspace.",
+        content: "Configure local preferences for the Forex intelligence workspace.",
       },
     ],
   }),
@@ -68,15 +68,15 @@ function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Preferences and your own AI keys, stored only in this browser."
-        actions={<SourceTag label={dataSource === "live" ? "Live API" : "Simulation"} />}
+        actions={<SourceTag label={dataSource === "live" ? "Live API" : "Direct feed"} />}
       />
 
       <section className="panel px-5 py-1">
-        <Row title="Data source" description="Simulation uses the real Forex Factory + MetalsMine calendar with local what-if releases. Live API reads from your scrapper server.">
-          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "direct" | "live"); toast.success(v === "live" ? "Switched to Live API" : "Switched to Simulation"); }}>
+        <Row title="Data source" description="Direct feed pulls Forex Factory + MetalsMine, Binance and news straight from this app. Scrapper API reads the same data from your server.">
+          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "direct" | "live"); toast.success(v === "live" ? "Switched to Live API" : "Switched to Direct feed"); }}>
             <SelectTrigger aria-label="Data source"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="direct">Simulation</SelectItem>
+              <SelectItem value="direct">Direct feed</SelectItem>
               <SelectItem value="live">Live API</SelectItem>
             </SelectContent>
           </Select>
@@ -98,7 +98,7 @@ function SettingsPage() {
           </Select>
         </Row>
 
-        <Row title="Real calendar" description="Pull the latest Forex Factory + MetalsMine week now. This clears simulated releases.">
+        <Row title="Real calendar" description="Pull the latest Forex Factory + MetalsMine week now. This clears what-if releases.">
           <SyncButton />
         </Row>
       </section>

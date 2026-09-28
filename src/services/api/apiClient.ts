@@ -125,7 +125,7 @@ const current = (): MarketApi =>
   useSettingsStore.getState().dataSource === "live" ? createLiveMarketApi(currentScrapperClient()) : mockApi;
 
 /**
- * Single entry point for page data. Delegates to the simulation or the live API
+ * Single entry point for page data. Delegates to the direct feed or the Scrapper API
  * based on Settings → Data Source, so components never branch on the source.
  */
 export const apiClient: MarketApi = {

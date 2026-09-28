@@ -16,7 +16,7 @@ export interface MutationResult {
 }
 
 /**
- * Contract shared by the simulation and the future /scrapper implementation.
+ * Contract shared by the direct feed and the future /scrapper implementation.
  * Components never touch an implementation directly — only this interface.
  */
 export interface MarketApi {
@@ -27,7 +27,7 @@ export interface MarketApi {
   getMarketSnapshot(): Promise<MarketSnapshot>;
   getMarketTimeline(): Promise<TimelinePoint[]>;
   getStatus(): Promise<ApiStatus>;
-  /** Simulation-only controls; the real API will reject these. */
+  /** What-if-only controls; the real API will reject these. */
   whatIfRelease(id: string): Promise<MutationResult>;
   whatIfUpdate(id: string): Promise<MutationResult>;
   resetWhatIf(): Promise<void>;

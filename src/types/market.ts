@@ -30,7 +30,7 @@ export interface EconomicEvent {
   previous: string | null;
   goldRelevance: Relevance;
   usdRelevance: Relevance;
-  /** Publishing agency (simulation) or the upstream feed name (live API). */
+  /** Publishing agency (direct feed) or the upstream feed name (live API). */
   source: string;
   /** Which calendar feed the event came from; "both" when it appears in each. */
   feed: EventSource;
@@ -108,6 +108,6 @@ export interface EventChange {
 export interface TimelinePoint {
   time: string;
   price: number;
-  /** Set when the point marks a simulated release. */
+  /** Set when the point marks a what-if release. */
   label: string | null;
 }

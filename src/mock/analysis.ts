@@ -1,6 +1,6 @@
 import type { ApiStatus, MarketAnalysis, MarketSnapshot } from "@/types/market";
 
-/** SIMULATED DATA ONLY — no AI provider is contacted. */
+/** SAMPLE DATA ONLY — no AI provider is contacted. */
 
 export const mockSnapshot: MarketSnapshot = {
   symbol: "XAUUSD",

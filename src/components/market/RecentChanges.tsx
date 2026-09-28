@@ -27,7 +27,7 @@ export function RecentChanges({ changes, loading, limit = 8 }: { changes?: Event
   if (!changes || changes.length === 0) {
     return (
       <div className="p-4">
-        <EmptyState title="No changes detected" description="Simulate a release on any event to see it here." />
+        <EmptyState title="No changes detected" description="Try a what-if release on any event to see it here." />
       </div>
     );
   }

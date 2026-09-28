@@ -36,7 +36,7 @@ export const toChange = (c: LiveChange): EventChange => ({
   detectedAt: c.detectedAt,
 });
 
-/** Thrown for data the /scrapper API does not provide (price feed, simulated analysis). */
+/** Thrown for data the /scrapper API does not provide (price feed, sample analysis). */
 export class NotInLiveModeError extends Error {
   constructor(what: string) {
     super(`${what} is not available from the live API.`);
@@ -45,7 +45,7 @@ export class NotInLiveModeError extends Error {
 }
 
 export function createLiveMarketApi(client: ScrapperClient): MarketApi {
-  const simOnly = () => Promise.reject(new Error("Simulation controls are disabled in Live API mode."));
+  const simOnly = () => Promise.reject(new Error("What-if controls are disabled in Live API mode."));
   return {
     getCalendar: async (range = "all") => {
       const r =
@@ -63,7 +63,7 @@ export function createLiveMarketApi(client: ScrapperClient): MarketApi {
       }
     },
     getChanges: async () => (await client.getChanges({ limit: 50 })).map(toChange),
-    getMarketAnalysis: () => Promise.reject(new NotInLiveModeError("Simulated analysis")),
+    getMarketAnalysis: () => Promise.reject(new NotInLiveModeError("Sample analysis")),
     getMarketSnapshot: async () => {
       const today = await client.getTodayCalendar().then((r) => r.data.map(toEvent)).catch(() => []);
       return realSnapshot(today);

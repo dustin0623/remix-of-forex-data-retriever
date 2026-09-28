@@ -26,12 +26,12 @@ export const Route = createFileRoute("/calendar")({
       {
         name: "description",
         content:
-          "Filter simulated Forex Factory-style economic events by date, currency, impact and gold relevance.",
+          "Filter real Forex Factory + MetalsMine events by date, currency, impact and gold relevance.",
       },
       { property: "og:title", content: "Economic Calendar — Forex Market Intelligence" },
       {
         property: "og:description",
-        content: "Simulated economic calendar with currency, impact and gold-relevance filters.",
+        content: "Real economic calendar with currency, impact and gold-relevance filters.",
       },
     ],
   }),
@@ -190,7 +190,7 @@ function CalendarPage() {
       <section className="panel">
         {events.isError ? (
           <div className="p-4">
-            <ErrorState message="The simulation layer did not respond." onRetry={() => events.refetch()} />
+            <ErrorState message="The calendar feed did not respond." onRetry={() => events.refetch()} />
           </div>
         ) : (
           <EventsTable events={filtered} loading={events.isLoading} showDate />

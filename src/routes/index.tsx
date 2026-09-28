@@ -52,8 +52,8 @@ function Dashboard() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Real Forex Factory + MetalsMine calendar and live gold price (Binance PAXG/USDT). Release outcomes stay simulated until you sync."
-        actions={<SourceTag label="Simulation · real calendar" />}
+        description="Real Forex Factory + MetalsMine calendar and live gold price (Binance PAXG/USDT). Try what-if releases from any event page."
+        actions={<SourceTag label="Direct feed · real data" />}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -142,7 +142,7 @@ function Dashboard() {
         </div>
         {events.isError ? (
           <div className="p-4">
-            <ErrorState message="The simulation layer did not respond." onRetry={() => events.refetch()} />
+            <ErrorState message="The calendar feed did not respond." onRetry={() => events.refetch()} />
           </div>
         ) : (
           <EventsTable
