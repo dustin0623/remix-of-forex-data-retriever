@@ -18,6 +18,17 @@ const EnvSchema = z.object({
   SCRAPER_ENRICH_ACTUALS: bool.default("true"),
   SCRAPER_EXPORT_URL: z.string().url().default("https://nfs.faireconomy.media/ff_calendar_thisweek.json"),
   SCRAPER_HTML_URL: z.string().url().default("https://www.forexfactory.com/calendar?week=this"),
+  SCRAPER_METALS_EXPORT_URL: z.string().url().default("https://nfs.faireconomy.media/mm_calendar_thisweek.json"),
+  SCRAPER_SOURCES: z
+    .string()
+    .default("forexfactory,metalsmine")
+    .transform((s) =>
+      s
+        .split(",")
+        .map((v) => v.trim().toLowerCase())
+        .filter((v): v is "forexfactory" | "metalsmine" => v === "forexfactory" || v === "metalsmine"),
+    )
+    .refine((v) => v.length > 0, { message: "SCRAPER_SOURCES must list forexfactory and/or metalsmine" }),
   SCRAPER_USER_AGENT: z
     .string()
     .default("Mozilla/5.0 (compatible; forex-scrapper-api/0.4; +low-frequency calendar reader)"),
