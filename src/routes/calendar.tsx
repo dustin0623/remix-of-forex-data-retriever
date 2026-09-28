@@ -51,6 +51,7 @@ function CalendarPage() {
   const [currency, setCurrency] = useState("all");
   const [impact, setImpact] = useState("all");
   const [gold, setGold] = useState("all");
+  const [feed, setFeed] = useState<SourceFilter>("all");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -61,16 +62,19 @@ function CalendarPage() {
       if (impact !== "all" && e.impact !== impact) return false;
       if (gold === "relevant" && (e.goldRelevance === "none" || e.goldRelevance === "low")) return false;
       if (gold !== "all" && gold !== "relevant" && e.goldRelevance !== gold) return false;
+      // Events carried by both calendars stay visible under either source.
+      if (feed !== "all" && e.feed !== feed && e.feed !== "both") return false;
       if (search && !e.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [events.data, date, currency, impact, gold, search]);
+  }, [events.data, date, currency, impact, gold, feed, search]);
 
   const reset = () => {
     setDate("");
     setCurrency("all");
     setImpact("all");
     setGold("all");
+    setFeed("all");
     setSearch("");
   };
 
