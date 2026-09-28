@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { CotCard } from "@/components/market/CotCard";
 import { AnalysisCard } from "@/components/market/AnalysisCard";
 import { EventsTable } from "@/components/market/EventsTable";
 import { MasterPostPanel } from "@/components/market/MasterPostPanel";
@@ -77,7 +78,10 @@ function GoldPage() {
         />
       </div>
 
-      <SentimentCard symbol="XAUUSD" />
+      <div className="grid gap-4 lg:grid-cols-2">
+        <SentimentCard symbol="XAUUSD" />
+        <CotCard />
+      </div>
 
       <MasterPostPanel events={goldEvents} />
 
