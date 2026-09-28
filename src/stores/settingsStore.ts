@@ -12,7 +12,7 @@ export const AI_PROVIDERS: Record<AiProvider, { label: string; defaultModel: str
   gemini: {
     label: "Google Gemini",
     defaultModel: "gemini-2.5-flash",
-    models: ["gemini-2.5-flash", "gemini-2.5-flash-lite", "gemini-2.5-pro"],
+    models: ["gemini-2.5-flash", "gemini-2.5-pro"],
     keyHint: "AIza…",
     keyUrl: "https://aistudio.google.com/apikey",
   },
