@@ -53,7 +53,7 @@ function aiError(msg: string): never {
   throw new Error(msg);
 }
 
-async function callModel(p: z.infer<typeof Base>, system: string, user: string): Promise<string> {
+async function sendOnce(p: z.infer<typeof Base>, system: string, user: string): Promise<Response> {
   let res: Response;
   const signal = AbortSignal.timeout(45_000);
   if (p.provider === "gemini") {
@@ -101,8 +101,20 @@ async function callModel(p: z.infer<typeof Base>, system: string, user: string):
       }),
     });
   }
+  return res;
+}
+
+async function callModel(p: z.infer<typeof Base>, system: string, user: string): Promise<string> {
+  let res = await sendOnce(p, system, user);
+  // One bounded retry for transient provider overload (5xx).
+  if (res.status >= 500) {
+    await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
+    res = await sendOnce(p, system, user);
+  }
   if (res.status === 401 || res.status === 403) aiError("The AI provider rejected the API key. Check it in Settings.");
   if (res.status === 429) aiError("The AI provider rate-limited this key. Try again in a minute.");
+  if (res.status === 503)
+    aiError(`"${p.model}" is overloaded at Google/the provider right now. Try again in a minute or pick another model in Settings.`);
   if (!res.ok) {
     let detail = "";
     try {
