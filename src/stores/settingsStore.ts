@@ -25,8 +25,8 @@ export const AI_PROVIDERS: Record<AiProvider, { label: string; defaultModel: str
   },
   anthropic: {
     label: "Anthropic",
-    defaultModel: "claude-3-5-haiku-latest",
-    models: ["claude-3-5-haiku-latest", "claude-sonnet-4-5"],
+    defaultModel: "claude-haiku-4-5",
+    models: ["claude-haiku-4-5", "claude-sonnet-4-5"],
     keyHint: "sk-ant-…",
     keyUrl: "https://console.anthropic.com/settings/keys",
   },
