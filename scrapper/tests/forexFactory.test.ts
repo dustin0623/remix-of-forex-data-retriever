@@ -100,18 +100,10 @@ function fakeClient(opts: { exportFail?: boolean; htmlFail?: boolean } = {}) {
 }
 
 describe("ForexFactoryProvider", () => {
-  it("caches and respects the minimum interval", async () => {
-    let now = new Date("2026-09-30T15:00:00Z");
+  it("fetches upstream on each call (caching lives in CalendarService)", async () => {
     const client = fakeClient();
-    const p = new ForexFactoryProvider({ client, minIntervalMs: 900_000, enrichActuals: true, logger: silent, now: () => now });
+    const p = new ForexFactoryProvider({ client, enrichActuals: true, logger: silent, now: () => new Date("2026-09-30T15:00:00Z") });
     await p.getWeek();
-    await p.getToday();
-    await p.getTomorrow();
-    expect(client.fetchWeekExport).toHaveBeenCalledTimes(1);
-    now = new Date(now.getTime() + 899_000);
-    await p.getWeek();
-    expect(client.fetchWeekExport).toHaveBeenCalledTimes(1);
-    now = new Date(now.getTime() + 2_000);
     await p.getWeek();
     expect(client.fetchWeekExport).toHaveBeenCalledTimes(2);
   });
@@ -132,7 +124,7 @@ describe("ForexFactoryProvider", () => {
     expect(week.every((e) => e.actual === null)).toBe(true);
   });
 
-  it("throws a clean 503 when nothing is cached and upstream fails", async () => {
+  it("throws a clean 503 when upstream fails", async () => {
     const p = new ForexFactoryProvider({ client: fakeClient({ exportFail: true }), minIntervalMs: 900_000, enrichActuals: false, logger: silent });
     await expect(p.getWeek()).rejects.toMatchObject({ statusCode: 503, code: "UPSTREAM_UNAVAILABLE" });
   });
