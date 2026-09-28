@@ -53,6 +53,8 @@ export type AppConfig = {
     enrichActuals: boolean;
     exportUrl: string;
     htmlUrl: string;
+    metalsExportUrl: string;
+    sources: ("forexfactory" | "metalsmine")[];
     userAgent: string;
   };
   aiEnabled: boolean;
