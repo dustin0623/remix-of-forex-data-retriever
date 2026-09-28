@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS events (
   event TEXT NOT NULL,
   currency TEXT NOT NULL,
   impact TEXT NOT NULL,
+  metals_impact TEXT,
   datetime TEXT NOT NULL,
   actual TEXT,
   forecast TEXT,
