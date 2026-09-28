@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { testAiKey } from "@/lib/ai.functions";
+import { testMyfxbookLogin } from "@/lib/sentiment.functions";
 import { getBaselineInfo, syncLiveCalendar } from "@/services/api/mockApi";
 import { AI_PROVIDERS, type AiProvider, type PostStyle } from "@/stores/settingsStore";
 
@@ -103,7 +104,103 @@ function SettingsPage() {
       </section>
 
       <AiSettings />
+
+      <MyfxbookSettings />
     </>
+  );
+}
+
+function MyfxbookSettings() {
+  const qc = useQueryClient();
+  const { myfxbookEmail, myfxbookPassword, setMyfxbook } = useSettingsStore();
+  const [email, setEmail] = useState(myfxbookEmail);
+  const [password, setPassword] = useState(myfxbookPassword);
+  const [testing, setTesting] = useState(false);
+  const testLogin = useServerFn(testMyfxbookLogin);
+
+  const save = (nextEmail: string, nextPassword: string) => {
+    setMyfxbook(nextEmail, nextPassword);
+    void qc.invalidateQueries({ queryKey: ["sentiment"] });
+  };
+
+  return (
+    <section className="panel px-5 py-1">
+      <div className="border-b border-border py-4">
+        <p className="text-sm font-semibold text-foreground">Myfxbook community outlook</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Sign in with a free Myfxbook account to show live retail long/short positioning for XAUUSD. Your login is kept in this
+          browser only and sent straight to Myfxbook. Results are cached for 15 minutes, so you stay well inside the free 100
+          requests a day.
+        </p>
+      </div>
+
+      <Row title="Myfxbook email" description="The email you use on myfxbook.com.">
+        <Input
+          type="email"
+          autoComplete="off"
+          placeholder="you@example.com"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          onBlur={() => save(email, password)}
+        />
+      </Row>
+
+      <Row title="Myfxbook password" description="Used only to open a Myfxbook session for the outlook data.">
+        <div className="space-y-1.5">
+          <Input
+            type="password"
+            autoComplete="new-password"
+            placeholder="••••••••"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onBlur={() => save(email, password)}
+          />
+          <a
+            href="https://www.myfxbook.com/community/outlook"
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs text-primary underline"
+          >
+            Create a free account
+          </a>
+        </div>
+      </Row>
+
+      <Row title="Test connection" description="Signs in once to confirm the email and password work.">
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            disabled={testing || !email || !password}
+            onClick={async () => {
+              setTesting(true);
+              save(email, password);
+              try {
+                await testLogin({ data: { email, password } });
+                toast.success("Myfxbook connected");
+              } catch (err) {
+                toast.error((err as Error).message);
+              } finally {
+                setTesting(false);
+              }
+            }}
+          >
+            {testing ? "Testing…" : "Test connection"}
+          </Button>
+          <Button
+            variant="ghost"
+            disabled={!myfxbookEmail && !myfxbookPassword}
+            onClick={() => {
+              setEmail("");
+              setPassword("");
+              save("", "");
+              toast.success("Myfxbook login removed");
+            }}
+          >
+            Remove
+          </Button>
+        </div>
+      </Row>
+    </section>
   );
 }
 

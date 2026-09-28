@@ -42,6 +42,10 @@ export interface SettingsState {
   aiKeys: Record<AiProvider, string>;
   aiModels: Record<AiProvider, string>;
   postStyle: PostStyle;
+  /** Myfxbook account used for the Community Outlook sentiment (browser only). */
+  myfxbookEmail: string;
+  myfxbookPassword: string;
+  setMyfxbook: (email: string, password: string) => void;
   setDataSource: (value: DataSource) => void;
   setTheme: (value: "dark" | "system") => void;
   setApiBaseUrl: (value: string) => void;
@@ -66,6 +70,9 @@ export const useSettingsStore = create<SettingsState>()(
       aiKeys: { gemini: "", openai: "", anthropic: "" },
       aiModels: { gemini: AI_PROVIDERS.gemini.defaultModel, openai: AI_PROVIDERS.openai.defaultModel, anthropic: AI_PROVIDERS.anthropic.defaultModel },
       postStyle: "professional",
+      myfxbookEmail: "",
+      myfxbookPassword: "",
+      setMyfxbook: (myfxbookEmail, myfxbookPassword) => set({ myfxbookEmail: myfxbookEmail.trim(), myfxbookPassword }),
       setDataSource: (dataSource) => set({ dataSource, simulationMode: dataSource === "simulation" }),
       setTheme: (theme) => set({ theme }),
       setApiBaseUrl: (apiBaseUrl) => set({ apiBaseUrl: apiBaseUrl.trim().replace(/\/+$/, "") }),
@@ -103,6 +110,8 @@ export const useSettingsStore = create<SettingsState>()(
         aiKeys: s.aiKeys,
         aiModels: s.aiModels,
         postStyle: s.postStyle,
+        myfxbookEmail: s.myfxbookEmail,
+        myfxbookPassword: s.myfxbookPassword,
       }),
     },
   ),
@@ -118,3 +127,5 @@ export function currentAiConfig() {
   return apiKey ? { provider: s.aiProvider, apiKey, model: s.aiModels[s.aiProvider] || AI_PROVIDERS[s.aiProvider].defaultModel } : null;
 }
 export const useAiConfigured = () => useSettingsStore((s) => Boolean(s.aiKeys[s.aiProvider]));
+export const useMyfxbookConfigured = () =>
+  useSettingsStore((s) => Boolean(s.myfxbookEmail && s.myfxbookPassword));
