@@ -5,6 +5,7 @@ import { AnalysisCard } from "@/components/market/AnalysisCard";
 import { EventsTable } from "@/components/market/EventsTable";
 import { MasterPostPanel } from "@/components/market/MasterPostPanel";
 import { PageHeader } from "@/components/market/PageHeader";
+import { SentimentCard } from "@/components/market/SentimentCard";
 import { StatCard } from "@/components/market/StatCard";
 import { SimulatedTag } from "@/components/market/badges";
 import { eventsQuery, goldAnalysisQuery, snapshotQuery } from "@/services/marketService";
