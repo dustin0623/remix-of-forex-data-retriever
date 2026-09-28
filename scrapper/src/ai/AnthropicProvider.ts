@@ -1,7 +1,7 @@
 import { AIError, type AIProvider } from "./AIProvider.js";
 import { SYSTEM_PROMPT, buildUserPrompt } from "./prompts/goldAnalysis.js";
 import {
-  MARKET_ANALYSIS_JSON_SCHEMA, MarketAnalysisSchema, findForbiddenTradingLanguage,
+  MARKET_ANALYSIS_JSON_SCHEMA, MarketAnalysisSchema, findForbiddenTradingLanguage, findHypeLanguage,
   type AnalysisInput, type MarketAnalysis,
 } from "./schemas/analysis.js";
 
@@ -89,6 +89,9 @@ export function validateAnalysis(raw: unknown): MarketAnalysis {
   if (!parsed.success) throw new AIError("AI_MALFORMED_RESPONSE", "AI response failed schema validation.");
   if (findForbiddenTradingLanguage(parsed.data)) {
     throw new AIError("AI_MALFORMED_RESPONSE", "AI response contained trading-call language and was rejected.");
+  }
+  if (findHypeLanguage(parsed.data)) {
+    throw new AIError("AI_MALFORMED_RESPONSE", "AI response contained overconfident or guaranteed-outcome language and was rejected.");
   }
   return parsed.data;
 }

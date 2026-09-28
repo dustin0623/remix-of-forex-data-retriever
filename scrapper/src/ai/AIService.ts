@@ -4,6 +4,8 @@ import type { CalendarService } from "../services/calendarService.js";
 import { ApiError } from "../utils/response.js";
 import { AIError, type AIProvider } from "./AIProvider.js";
 import { AnthropicProvider, validateAnalysis } from "./AnthropicProvider.js";
+import { MockAIProvider } from "./MockAIProvider.js";
+import { surpriseDirection } from "./surprise.js";
 import type { AnalysisInput, MarketAnalysis } from "./schemas/analysis.js";
 
 export interface AIResult {
@@ -19,7 +21,9 @@ const toInput = (e: EconomicEvent) => ({
 
 /** Returns null when AI is disabled or no key is set — the server still starts. */
 export function createAIProvider(config: AppConfig, timeoutMs?: number): AIProvider | null {
-  if (!config.aiEnabled || !config.anthropicApiKey || config.aiProvider !== "anthropic") return null;
+  if (!config.aiEnabled) return null;
+  if (config.aiProvider === "mock") return new MockAIProvider();
+  if (config.aiProvider !== "anthropic" || !config.anthropicApiKey) return null;
   return new AnthropicProvider({ apiKey: config.anthropicApiKey, model: config.aiModel, ...(timeoutMs ? { timeoutMs } : {}) });
 }
 
@@ -28,6 +32,7 @@ export class AIService {
     private readonly provider: AIProvider | null,
     private readonly calendar: CalendarService,
     private readonly now: () => Date = () => new Date(),
+    private readonly postStyle: AnalysisInput["postStyle"] = "professional",
   ) {}
 
   get configured(): boolean {
@@ -36,7 +41,22 @@ export class AIService {
 
   private async run(input: AnalysisInput): Promise<AIResult> {
     if (!this.provider) throw new AIError("AI_NOT_CONFIGURED", "AI analysis is not configured.");
-    const data = validateAnalysis(await this.provider.analyze(input)); // re-validate any provider
+    let data = validateAnalysis(await this.provider.analyze(input)); // re-validate any provider
+    const f = input.focusEvent;
+    if (f) {
+      // Observed values always come from our data, never from the model.
+      data = {
+        ...data,
+        eventAnalysis: {
+          macroImplication: data.eventAnalysis?.macroImplication ?? "unknown",
+          goldContext: data.eventAnalysis?.goldContext ?? "unknown",
+          actual: f.actual, forecast: f.forecast, previous: f.previous,
+          surpriseDirection: surpriseDirection(f.actual, f.forecast),
+        },
+      };
+    } else {
+      data = { ...data, eventAnalysis: null };
+    }
     return { data, meta: { aiProvider: this.provider.name, model: this.provider.model, generatedAt: this.now().toISOString() } };
   }
 
@@ -49,9 +69,10 @@ export class AIService {
       .map(({ eventId, eventTitle, changeType, oldValue, newValue, detectedAt }) => ({ eventId, eventTitle, changeType, oldValue, newValue, detectedAt }));
     return {
       task,
+      postStyle: this.postStyle,
       generatedAt: this.now().toISOString(),
       market: "XAUUSD",
-      focusEvent: focus ? toInput(focus) : null,
+      focusEvent: focus ? { ...toInput(focus), surpriseDirection: surpriseDirection(focus.actual, focus.forecast) } : null,
       events: events.map(toInput),
       recentChanges,
       marketSnapshot: null, // no live XAUUSD feed yet

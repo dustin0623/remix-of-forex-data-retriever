@@ -17,9 +17,10 @@ export const AnalysisEventSchema = z.object({
 
 export const AnalysisInputSchema = z.object({
   task: z.enum(["gold_today", "event", "gold_event"]),
+  postStyle: z.enum(["professional", "concise", "educational"]),
   generatedAt: z.string(),
   market: z.literal("XAUUSD"),
-  focusEvent: AnalysisEventSchema.nullable(),
+  focusEvent: AnalysisEventSchema.extend({ surpriseDirection: z.string().optional() }).nullable(),
   events: z.array(AnalysisEventSchema),
   recentChanges: z.array(
     z.object({
@@ -48,6 +49,24 @@ export const KeyEventSchema = z
   })
   .strict();
 
+export const SurpriseDirectionSchema = z.enum(["above_forecast", "below_forecast", "in_line", "not_released", "unknown"]);
+export type SurpriseDirection = z.infer<typeof SurpriseDirectionSchema>;
+
+/** Post-release detail for event analysis. Observed fields are filled server-side, not by the model. */
+export const EventAnalysisSchema = z
+  .object({
+    actual: z.string().nullable(),
+    forecast: z.string().nullable(),
+    previous: z.string().nullable(),
+    surpriseDirection: SurpriseDirectionSchema,
+    macroImplication: z.string(),
+    goldContext: z.string(),
+  })
+  .strict();
+export type EventAnalysis = z.infer<typeof EventAnalysisSchema>;
+
+export const MASTER_POST_MAX = 1500;
+
 export const MarketAnalysisSchema = z
   .object({
     market: z.literal("XAUUSD"),
@@ -61,7 +80,8 @@ export const MarketAnalysisSchema = z
     bearishScenario: z.string(),
     neutralScenario: z.string(),
     warnings: z.array(z.string()),
-    masterPost: z.string(),
+    masterPost: z.string().min(40).max(MASTER_POST_MAX),
+    eventAnalysis: EventAnalysisSchema.nullable().optional(),
   })
   .strict();
 export type MarketAnalysis = z.infer<typeof MarketAnalysisSchema>;
@@ -77,12 +97,29 @@ const FORBIDDEN: RegExp[] = [
   /\bleverage\b/i,
 ];
 
+/** Overconfident / hype language the post must avoid (use could / may / potentially). */
+const HYPE: RegExp[] = [
+  /\b(gold|xauusd|price|it)\s+will\s+(rise|crash|fall|drop|surge|soar|plunge|rally|explode|collapse|go (up|down))\b/i,
+  /\bguarantee(d|s)?\b/i,
+  /\beasy (profit|money|gains?)\b/i,
+  /\brisk[- ]free\b/i,
+  /\bsure (thing|bet)\b/i,
+  /\b100% (certain|sure)\b/i,
+];
+
 export function findForbiddenTradingLanguage(a: MarketAnalysis): string | null {
   const texts = [
+    a.eventAnalysis?.macroImplication ?? "", a.eventAnalysis?.goldContext ?? "",
     a.summary, a.bullishScenario, a.bearishScenario, a.neutralScenario, a.masterPost,
     ...a.keyDrivers, ...a.warnings, ...a.keyEvents.map((e) => e.whyItMatters),
   ];
   for (const t of texts) for (const re of FORBIDDEN) if (re.test(t)) return re.source;
+  return null;
+}
+
+export function findHypeLanguage(a: MarketAnalysis): string | null {
+  const texts = [a.summary, a.bullishScenario, a.bearishScenario, a.neutralScenario, a.masterPost, ...a.keyDrivers];
+  for (const t of texts) for (const re of HYPE) if (re.test(t)) return re.source;
   return null;
 }
 
@@ -120,6 +157,19 @@ export const MARKET_ANALYSIS_JSON_SCHEMA = {
     bearishScenario: { type: "string" },
     neutralScenario: { type: "string" },
     warnings: { type: "array", items: { type: "string" } },
-    masterPost: { type: "string" },
+    masterPost: { type: "string", maxLength: 1500 },
+    eventAnalysis: {
+      type: ["object", "null"],
+      additionalProperties: false,
+      required: ["actual", "forecast", "previous", "surpriseDirection", "macroImplication", "goldContext"],
+      properties: {
+        actual: { type: ["string", "null"] },
+        forecast: { type: ["string", "null"] },
+        previous: { type: ["string", "null"] },
+        surpriseDirection: { type: "string", enum: ["above_forecast", "below_forecast", "in_line", "not_released", "unknown"] },
+        macroImplication: { type: "string" },
+        goldContext: { type: "string" },
+      },
+    },
   },
 } as const;
