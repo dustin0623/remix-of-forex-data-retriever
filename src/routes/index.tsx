@@ -10,7 +10,10 @@ import { RecentChanges } from "@/components/market/RecentChanges";
 import { StatCard } from "@/components/market/StatCard";
 import { SimulatedTag } from "@/components/market/badges";
 import { Skeleton } from "@/components/ui/skeleton";
-import { changesQuery, dashboardAnalysisQuery, snapshotQuery, timelineQuery, todayEventsQuery } from "@/services/marketService";
+import { analyzeGold } from "@/lib/ai.functions";
+import { changesQuery, eventsQuery, snapshotQuery, timelineQuery, todayEventsQuery } from "@/services/marketService";
+import { currentAiConfig, useAiConfigured } from "@/stores/settingsStore";
+import type { MarketAnalysis } from "@/types/market";
 
 export const Route = createFileRoute("/")({
   head: () => ({
