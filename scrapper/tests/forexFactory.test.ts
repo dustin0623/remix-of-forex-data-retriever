@@ -6,13 +6,14 @@ import { createProvider } from "../src/scraper/createProvider.js";
 import { MockCalendarProvider } from "../src/scraper/MockCalendarProvider.js";
 import { ForexFactoryClient, UpstreamError } from "../src/scraper/forexFactory/ForexFactoryClient.js";
 import {
-  buildEventId, mergeActuals, normalizeImpact, parseCalendarHtml, parseExport,
+  buildEventId, mergeActuals, mergeFeeds, normalizeImpact, parseCalendarHtml, parseExport,
 } from "../src/scraper/forexFactory/ForexFactoryParser.js";
 import { ForexFactoryProvider } from "../src/scraper/forexFactory/ForexFactoryProvider.js";
 import type { ScraperLogger } from "../src/scraper/forexFactory/types.js";
 import { GoldRelevanceService } from "../src/services/goldRelevanceService.js";
 
 const exportJson = JSON.parse(readFileSync(new URL("./fixtures/ff_export.json", import.meta.url), "utf8"));
+const metalsJson = JSON.parse(readFileSync(new URL("./fixtures/mm_export.json", import.meta.url), "utf8"));
 const html = readFileSync(new URL("./fixtures/ff_calendar.html", import.meta.url), "utf8");
 const silent: ScraperLogger = { info() {}, warn() {}, error() {} };
 
