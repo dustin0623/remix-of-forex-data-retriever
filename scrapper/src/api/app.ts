@@ -39,6 +39,7 @@ export async function buildApp({ config, provider, logger = false, now, aiProvid
     aiProvider === undefined ? createAIProvider(config, config.aiTimeoutMs) : aiProvider,
     service,
     now,
+    config.postStyle,
   );
 
   app.addHook("onSend", async (_req, reply, payload) => {

@@ -20,7 +20,7 @@ export const AnalysisInputSchema = z.object({
   postStyle: z.enum(["professional", "concise", "educational"]),
   generatedAt: z.string(),
   market: z.literal("XAUUSD"),
-  focusEvent: AnalysisEventSchema.nullable(),
+  focusEvent: AnalysisEventSchema.extend({ surpriseDirection: z.string().optional() }).nullable(),
   events: z.array(AnalysisEventSchema),
   recentChanges: z.array(
     z.object({
