@@ -4,6 +4,13 @@ export const ImpactSchema = z.enum(["low", "medium", "high"]);
 export const CurrencySchema = z.string().regex(/^[A-Z]{3}$/);
 export const RelevanceSchema = z.enum(["none", "low", "medium", "high", "very_high"]);
 export const EventStatusSchema = z.enum(["UPCOMING", "RELEASED", "UPDATED"]);
+/** Which upstream calendar an event came from ("both" when it appears in each). */
+export const EventSourceSchema = z.enum(["forexfactory", "metalsmine", "both"]);
+export type EventSource = z.infer<typeof EventSourceSchema>;
+/** ?source= filter accepted by the calendar endpoints. */
+export const SourceFilterSchema = z.enum(["all", "forexfactory", "metalsmine"]);
+export type SourceFilter = z.infer<typeof SourceFilterSchema>;
+export const SourceQuerySchema = z.object({ source: SourceFilterSchema.default("all") });
 
 /** Mirrors the frontend's EconomicEvent (src/types/market.ts). */
 export const EconomicEventSchema = z.object({
