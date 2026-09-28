@@ -100,6 +100,8 @@ export class CalendarService {
   }
   highImpact(source: SourceFilter = "all") { return this.filtered((e) => e.impact === "high", source); }
   goldRelevant(source: SourceFilter = "all") { return this.filtered((e) => GOLD.includes(e.goldRelevance), source); }
+  /** The full week, optionally narrowed to one upstream feed. */
+  weekBySource(source: SourceFilter = "all") { return this.filtered(() => true, source); }
 
   async byId(id: string): Promise<EconomicEvent | null> {
     const stored = this.repo.findById(id);
