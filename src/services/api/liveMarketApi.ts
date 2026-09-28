@@ -2,6 +2,7 @@ import type { Currency, EconomicEvent, EventChange, EventSource, Relevance } fro
 
 import type { ScrapperClient } from "./apiClient";
 import type { LiveChange, LiveEvent, LiveRelevance } from "./liveTypes";
+import { realSnapshot, realTimeline } from "./goldPrice";
 import type { MarketApi } from "./types";
 
 const rel = (r: LiveRelevance): Relevance => (r === "very_high" ? "high" : r);
@@ -63,8 +64,14 @@ export function createLiveMarketApi(client: ScrapperClient): MarketApi {
     },
     getChanges: async () => (await client.getChanges({ limit: 50 })).map(toChange),
     getMarketAnalysis: () => Promise.reject(new NotInLiveModeError("Simulated analysis")),
-    getMarketSnapshot: () => Promise.reject(new NotInLiveModeError("A live XAUUSD price feed")),
-    getMarketTimeline: () => Promise.reject(new NotInLiveModeError("A live XAUUSD price timeline")),
+    getMarketSnapshot: async () => {
+      const today = await client.getTodayCalendar().then((r) => r.data.map(toEvent)).catch(() => []);
+      return realSnapshot(today);
+    },
+    getMarketTimeline: async () => {
+      const changes = await client.getChanges({ limit: 50 }).then((c) => c.map(toChange)).catch(() => []);
+      return realTimeline(changes);
+    },
     getStatus: async () => {
       const s = await client.getStatus();
       return {

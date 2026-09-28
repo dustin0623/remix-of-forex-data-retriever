@@ -20,7 +20,7 @@ export function MarketTimeline({ points, loading }: { points?: TimelinePoint[] |
 
   return (
     <div className="p-5">
-      <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full" preserveAspectRatio="none" role="img" aria-label="Simulated XAUUSD intraday price line">
+      <svg viewBox={`0 0 ${W} ${H}`} className="h-36 w-full" preserveAspectRatio="none" role="img" aria-label="XAUUSD 24h price line">
         <path d={path} fill="none" stroke="var(--gold)" strokeWidth={1.8} vectorEffect="non-scaling-stroke" />
         {markers.map((m) => (
           <circle key={m.time} cx={x(m.time)} cy={y(m.price)} r={4} fill="var(--primary)">
