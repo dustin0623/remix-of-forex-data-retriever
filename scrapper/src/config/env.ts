@@ -25,6 +25,7 @@ const EnvSchema = z.object({
   AI_PROVIDER: z.string().default("anthropic"),
   ANTHROPIC_API_KEY: z.string().optional().default(""),
   ANTHROPIC_MODEL: z.string().min(1).default("claude-haiku-4-5"),
+  POST_STYLE: z.enum(["professional", "concise", "educational"]).default("professional"),
   AI_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
 });
 
@@ -47,6 +48,7 @@ export type AppConfig = {
   aiProvider: string;
   aiModel: string;
   aiTimeoutMs: number;
+  postStyle: "professional" | "concise" | "educational";
   /** Never serialise this into responses or logs. */
   anthropicApiKey: string;
 };
@@ -72,6 +74,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     aiProvider: e.AI_PROVIDER,
     aiModel: e.ANTHROPIC_MODEL,
     aiTimeoutMs: e.AI_TIMEOUT_MS,
+    postStyle: e.POST_STYLE,
     anthropicApiKey: e.ANTHROPIC_API_KEY,
   };
 }
