@@ -11,8 +11,8 @@ export const DEFAULT_API_BASE_URL =
 export const AI_PROVIDERS: Record<AiProvider, { label: string; defaultModel: string; models: string[]; keyHint: string; keyUrl: string }> = {
   gemini: {
     label: "Google Gemini",
-    defaultModel: "gemini-2.5-flash",
-    models: ["gemini-2.5-flash", "gemini-2.5-pro"],
+    defaultModel: "gemini-3.8-flash",
+    models: ["gemini-3.8-flash", "gemini-3.5-flash-lite"],
     keyHint: "AIza…",
     keyUrl: "https://aistudio.google.com/apikey",
   },
