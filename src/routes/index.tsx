@@ -37,9 +37,47 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const events = useQuery(todayEventsQuery());
   const snapshot = useQuery(snapshotQuery());
-  const analysis = useQuery(dashboardAnalysisQuery());
   const changes = useQuery(changesQuery());
   const timeline = useQuery(timelineQuery());
+  const week = useQuery(eventsQuery());
+  const aiConfigured = useAiConfigured();
+
+  const analysis = useQuery({
+    queryKey: ["analysis", "dashboard", "ai"],
+    enabled: aiConfigured && Boolean(week.data),
+    staleTime: 10 * 60_000,
+    queryFn: async (): Promise<MarketAnalysis> => {
+      const config = currentAiConfig();
+      if (!config) throw new Error("No AI key configured");
+      const goldEvents = (week.data ?? [])
+        .filter((e) => e.goldRelevance === "high" || e.goldRelevance === "medium")
+        .slice(0, 60)
+        .map((e) => ({
+          title: e.title,
+          currency: e.currency,
+          impact: e.impact,
+          datetime: e.datetime,
+          actual: e.actual,
+          forecast: e.forecast,
+          previous: e.previous,
+          goldRelevance: e.goldRelevance,
+        }));
+      const out = await analyzeGold({ data: { ...config, events: goldEvents } });
+      return {
+        id: `ai-${out.generatedAt}`,
+        subject: "Today's macro session",
+        bias: out.bias,
+        confidence: out.confidence / 100,
+        summary: out.summary,
+        keyDrivers: out.keyDrivers,
+        mainRisks: out.mainRisks,
+        usdContext: out.usdContext,
+        scenarios: out.scenarios.map((s) => ({ ...s, probability: s.probability / 100 })),
+        generatedAt: out.generatedAt,
+        simulated: false,
+      };
+    },
+  });
 
   const list = events.data ?? [];
   const highImpact = list.filter((e) => e.impact === "high");
