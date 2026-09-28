@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { eventsQuery } from "@/services/marketService";
+import type { SourceFilter } from "@/types/market";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
