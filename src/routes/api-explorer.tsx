@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 
 import { PageHeader } from "@/components/market/PageHeader";
-import { SimulatedTag } from "@/components/market/badges";
+import { SourceTag } from "@/components/market/badges";
 import { useSettingsStore } from "@/stores/settingsStore";
 import { cn } from "@/lib/utils";
 
@@ -52,8 +52,8 @@ const endpoints: Endpoint[] = [
     path: "/api/status",
     summary: "Service health, environment and AI connection state.",
     sample: {
-      environment: "simulation",
-      apiMode: "Simulated",
+      environment: "direct",
+      apiMode: "Direct",
       aiProvider: "Not configured",
       aiConnected: false,
       scraperConnected: false,
@@ -129,7 +129,7 @@ const endpoints: Endpoint[] = [
       scenarios: [
         { type: "bearish", probability: 0.45, trigger: "Inflation and employment both beat" },
       ],
-      simulated: true,
+      sample: true,
     },
   },
   {
@@ -141,7 +141,7 @@ const endpoints: Endpoint[] = [
       bias: "neutral",
       confidence: 0.58,
       summary: "In-line print keeps the range intact.",
-      simulated: true,
+      sample: true,
     },
   },
 ];
@@ -156,7 +156,7 @@ function ApiExplorer() {
       <PageHeader
         title="API Explorer"
         description="Contract preview for the scraper service that will live in /scrapper. These endpoints are documentation only — nothing is callable yet."
-        actions={<SimulatedTag label="Not callable" />}
+        actions={<SourceTag label="Not callable" />}
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(280px,360px)_1fr]">

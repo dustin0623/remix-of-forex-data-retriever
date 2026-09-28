@@ -1,7 +1,7 @@
 import { analyzeGold } from "@/lib/ai.functions";
 import { fetchRealCalendar } from "@/lib/calendar.functions";
 import { mockDashboardAnalysis, mockGoldAnalysis } from "@/mock/analysis";
-import * as sim from "@/services/mock/simulationService";
+import * as sim from "@/services/mock/whatIfService";
 import { AI_PROVIDERS, currentAiConfig, useSettingsStore } from "@/stores/settingsStore";
 import type { EconomicEvent, MarketAnalysis } from "@/types/market";
 
@@ -58,7 +58,7 @@ async function ensureBaseline() {
 export async function syncLiveCalendar() {
   await loadBaseline(true);
   loaded = true;
-  sim.resetSimulation();
+  sim.resetWhatIf();
 }
 
 const wrap = <T>(fn: () => T) => ensureBaseline().then(fn);
@@ -86,7 +86,7 @@ async function aiGoldAnalysis(subject: "dashboard" | "gold"): Promise<MarketAnal
     usdContext: r.usdContext,
     scenarios: r.scenarios.map((s) => ({ ...s, probability: s.probability / 100 })),
     generatedAt: r.generatedAt,
-    simulated: false,
+    sample: false,
   };
 }
 
@@ -113,8 +113,8 @@ export const mockApi: MarketApi = {
       const cfg = currentAiConfig();
       const provider = useSettingsStore.getState().aiProvider;
       return {
-        environment: "simulation" as const,
-        apiMode: "Simulated" as const,
+        environment: "direct" as const,
+        apiMode: "Direct" as const,
         aiProvider: cfg ? AI_PROVIDERS[provider].label : "none",
         aiConnected: Boolean(cfg),
         scraperConnected: baselineInfo.kind === "live" || baselineInfo.kind === "cache",
@@ -122,7 +122,7 @@ export const mockApi: MarketApi = {
         uptimeSeconds: 0,
       };
     }),
-  simulateRelease: (id) => wrap(() => sim.simulateEventRelease(id)),
-  simulateUpdate: (id) => wrap(() => sim.simulateEventUpdate(id)),
-  resetSimulation: () => wrap(() => sim.resetSimulation()),
+  whatIfRelease: (id) => wrap(() => sim.whatIfEventRelease(id)),
+  whatIfUpdate: (id) => wrap(() => sim.whatIfEventUpdate(id)),
+  resetWhatIf: () => wrap(() => sim.resetWhatIf()),
 };

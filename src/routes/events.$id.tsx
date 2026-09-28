@@ -4,10 +4,10 @@ import { ArrowLeft, PencilLine, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState, PageHeader } from "@/components/market/PageHeader";
-import { ImpactBadge, RelevanceMeter, SimulatedTag } from "@/components/market/badges";
+import { ImpactBadge, RelevanceMeter, SourceTag } from "@/components/market/badges";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { eventQuery, useSimulationActions } from "@/services/marketService";
+import { eventQuery, useWhatIfActions } from "@/services/marketService";
 import type { EconomicEvent } from "@/types/market";
 
 export const Route = createFileRoute("/events/$id")({
@@ -45,7 +45,7 @@ const feedLabel = (feed: EconomicEvent["feed"]) =>
 function EventDetails() {
   const { id } = Route.useParams();
   const { data: event, isLoading, isError, refetch } = useQuery(eventQuery(id));
-  const { release, update, reset } = useSimulationActions();
+  const { release, update, reset } = useWhatIfActions();
   const busy = release.isPending || update.isPending || reset.isPending;
 
   if (isLoading) {
@@ -85,7 +85,7 @@ function EventDetails() {
         actions={
           <div className="flex items-center gap-2">
             <ImpactBadge impact={event.impact} />
-            <SimulatedTag label="Simulated data" />
+            <SourceTag label="Simulated data" />
           </div>
         }
       />

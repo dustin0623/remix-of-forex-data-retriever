@@ -28,7 +28,7 @@ export interface MarketApi {
   getMarketTimeline(): Promise<TimelinePoint[]>;
   getStatus(): Promise<ApiStatus>;
   /** Simulation-only controls; the real API will reject these. */
-  simulateRelease(id: string): Promise<MutationResult>;
-  simulateUpdate(id: string): Promise<MutationResult>;
-  resetSimulation(): Promise<void>;
+  whatIfRelease(id: string): Promise<MutationResult>;
+  whatIfUpdate(id: string): Promise<MutationResult>;
+  resetWhatIf(): Promise<void>;
 }

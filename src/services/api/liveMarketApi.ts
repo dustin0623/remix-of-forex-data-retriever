@@ -84,8 +84,8 @@ export function createLiveMarketApi(client: ScrapperClient): MarketApi {
         uptimeSeconds: 0,
       };
     },
-    simulateRelease: simOnly,
-    simulateUpdate: simOnly,
-    resetSimulation: simOnly,
+    whatIfRelease: simOnly,
+    whatIfUpdate: simOnly,
+    resetWhatIf: simOnly,
   };
 }

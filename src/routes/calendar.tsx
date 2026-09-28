@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { EventsTable } from "@/components/market/EventsTable";
 import { ErrorState, PageHeader } from "@/components/market/PageHeader";
-import { SimulatedTag } from "@/components/market/badges";
+import { SourceTag } from "@/components/market/badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -84,7 +84,7 @@ function CalendarPage() {
       <PageHeader
         title="Economic Calendar"
         description="Real Forex Factory + MetalsMine events for this week. Select any row for full event detail."
-        actions={<SimulatedTag label="Real calendar" />}
+        actions={<SourceTag label="Real calendar" />}
       />
 
       <section className="panel p-4">

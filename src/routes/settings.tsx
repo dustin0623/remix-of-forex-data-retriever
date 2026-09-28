@@ -11,7 +11,7 @@ import { getBaselineInfo, syncLiveCalendar } from "@/services/api/mockApi";
 import { AI_PROVIDERS, type AiProvider, type PostStyle } from "@/stores/settingsStore";
 
 import { PageHeader } from "@/components/market/PageHeader";
-import { SimulatedTag } from "@/components/market/badges";
+import { SourceTag } from "@/components/market/badges";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -68,15 +68,15 @@ function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Preferences and your own AI keys, stored only in this browser."
-        actions={<SimulatedTag label={dataSource === "live" ? "Live API" : "Simulation"} />}
+        actions={<SourceTag label={dataSource === "live" ? "Live API" : "Simulation"} />}
       />
 
       <section className="panel px-5 py-1">
         <Row title="Data source" description="Simulation uses the real Forex Factory + MetalsMine calendar with local what-if releases. Live API reads from your scrapper server.">
-          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "simulation" | "live"); toast.success(v === "live" ? "Switched to Live API" : "Switched to Simulation"); }}>
+          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "direct" | "live"); toast.success(v === "live" ? "Switched to Live API" : "Switched to Simulation"); }}>
             <SelectTrigger aria-label="Data source"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="simulation">Simulation</SelectItem>
+              <SelectItem value="direct">Simulation</SelectItem>
               <SelectItem value="live">Live API</SelectItem>
             </SelectContent>
           </Select>

@@ -136,7 +136,7 @@ export const apiClient: MarketApi = {
   getMarketSnapshot: () => current().getMarketSnapshot(),
   getMarketTimeline: () => current().getMarketTimeline(),
   getStatus: () => current().getStatus(),
-  simulateRelease: (id) => current().simulateRelease(id),
-  simulateUpdate: (id) => current().simulateUpdate(id),
-  resetSimulation: () => current().resetSimulation(),
+  whatIfRelease: (id) => current().whatIfRelease(id),
+  whatIfUpdate: (id) => current().whatIfUpdate(id),
+  resetWhatIf: () => current().resetWhatIf(),
 };

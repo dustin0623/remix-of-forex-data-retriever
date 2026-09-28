@@ -72,12 +72,12 @@ export interface MarketAnalysis {
   usdContext: string;
   scenarios: Scenario[];
   generatedAt: string;
-  simulated: boolean;
+  sample: boolean;
 }
 
 export interface ApiStatus {
-  environment: "simulation" | "live";
-  apiMode: "Simulated" | "Connected";
+  environment: "direct" | "live";
+  apiMode: "Direct" | "Connected";
   aiProvider: string;
   aiConnected: boolean;
   scraperConnected: boolean;

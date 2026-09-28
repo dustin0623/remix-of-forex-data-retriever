@@ -59,7 +59,7 @@ export const mockDashboardAnalysis: MarketAnalysis = {
     },
   ],
   generatedAt: new Date().toISOString(),
-  simulated: true,
+  sample: true,
 };
 
 export const mockGoldAnalysis: MarketAnalysis = {
@@ -106,12 +106,12 @@ export const mockGoldAnalysis: MarketAnalysis = {
     },
   ],
   generatedAt: new Date().toISOString(),
-  simulated: true,
+  sample: true,
 };
 
 export const mockApiStatus: ApiStatus = {
-  environment: "simulation",
-  apiMode: "Simulated",
+  environment: "direct",
+  apiMode: "Direct",
   aiProvider: "Not configured",
   aiConnected: false,
   scraperConnected: false,
