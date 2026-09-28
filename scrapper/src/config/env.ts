@@ -81,6 +81,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
       enrichActuals: e.SCRAPER_ENRICH_ACTUALS,
       exportUrl: e.SCRAPER_EXPORT_URL,
       htmlUrl: e.SCRAPER_HTML_URL,
+      metalsExportUrl: e.SCRAPER_METALS_EXPORT_URL,
+      sources: e.SCRAPER_SOURCES,
       userAgent: e.SCRAPER_USER_AGENT,
     },
     aiEnabled: e.AI_ENABLED,
