@@ -76,14 +76,21 @@ export interface ApiStatus {
   uptimeSeconds: number;
 }
 
-export type ChangeType = "actual_released" | "actual_revised" | "forecast_revised";
+export type ChangeType =
+  | "actual_released"
+  | "actual_revised"
+  | "forecast_revised"
+  | "forecast_changed"
+  | "previous_changed"
+  | "impact_changed"
+  | "event_updated";
 
 export interface EventChange {
   id: string;
   eventId: string;
   eventTitle: string;
   changeType: ChangeType;
-  field: "actual" | "forecast" | "previous";
+  field: "actual" | "forecast" | "previous" | "impact" | "datetime";
   previousValue: string | null;
   newValue: string | null;
   detectedAt: string;

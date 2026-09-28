@@ -4,8 +4,6 @@ import { toast } from "sonner";
 import { PageHeader } from "@/components/market/PageHeader";
 import { SimulatedTag } from "@/components/market/badges";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -54,70 +52,29 @@ function Row({
 }
 
 function SettingsPage() {
-  const {
-    simulationMode,
-    setSimulationMode,
-    dataSource,
-    theme,
-    setTheme,
-    apiEndpoint,
-    setApiEndpoint,
-    aiProvider,
-  } = useSettingsStore();
+  const { dataSource, setDataSource, theme, setTheme, apiBaseUrl, setApiBaseUrl } = useSettingsStore();
 
   return (
     <>
       <PageHeader
         title="Settings"
-        description="Local preferences only. No credentials are stored and nothing connects to an external service."
-        actions={<SimulatedTag label="Phase 1" />}
+        description="Local preferences stored in this browser. No credentials or API keys are stored here."
+        actions={<SimulatedTag label={dataSource === "live" ? "Live API" : "Simulation"} />}
       />
 
       <section className="panel px-5 py-1">
-        <Row
-          title="Simulation mode"
-          description="Keeps all data sourced from the local mock layer. Live mode becomes available once the scraper service ships."
-        >
-          <div className="flex items-center justify-end gap-3">
-            <Switch
-              id="sim-mode"
-              checked={simulationMode}
-              onCheckedChange={(value) => {
-                if (!value) {
-                  toast.warning("Live mode is not available in Phase 1", {
-                    description: "No scraper or market data service is connected yet.",
-                  });
-                  return;
-                }
-                setSimulationMode(true);
-              }}
-            />
-            <Label htmlFor="sim-mode" className="text-sm">
-              {simulationMode ? "On" : "Off"}
-            </Label>
-          </div>
+        <Row title="Data source" description="Simulation uses the built-in mock data. Live API reads from the scrapper server.">
+          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "simulation" | "live"); toast.success(v === "live" ? "Switched to Live API" : "Switched to Simulation"); }}>
+            <SelectTrigger aria-label="Data source"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="simulation">Simulation</SelectItem>
+              <SelectItem value="live">Live API</SelectItem>
+            </SelectContent>
+          </Select>
         </Row>
 
-        <Row
-          title="Data source"
-          description="Where calendar, change and market data come from."
-        >
-          <div className="space-y-1.5">
-            <Select value={dataSource}>
-              <SelectTrigger aria-label="Data source">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="simulation">Simulation</SelectItem>
-                <SelectItem value="external" disabled>
-                  External API
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-muted-foreground">
-              Real API integration will be enabled in a later phase.
-            </p>
-          </div>
+        <Row title="API base URL" description="Address of the scrapper server used in Live API mode.">
+          <Input value={apiBaseUrl} onChange={(e) => setApiBaseUrl(e.target.value)} className="num" />
         </Row>
 
         <Row title="Theme" description="The trading terminal palette is tuned for low-light desks.">
@@ -132,23 +89,6 @@ function SettingsPage() {
           </Select>
         </Row>
 
-        <Row
-          title="API endpoint"
-          description="Base URL the frontend will call once the /scrapper service exists. Stored in memory only."
-        >
-          <Input value={apiEndpoint} onChange={(e) => setApiEndpoint(e.target.value)} className="num" />
-        </Row>
-
-        <Row title="AI provider" description="Analysis text is produced by the local simulation layer.">
-          <p className="text-right text-sm text-muted-foreground">{aiProvider}</p>
-        </Row>
-
-        <Row title="AI connection status" description="No provider key is configured and none is required.">
-          <div className="flex items-center justify-end gap-2">
-            <span className="size-2 rounded-full bg-warn" aria-hidden />
-            <span className="text-sm text-foreground">Not connected</span>
-          </div>
-        </Row>
       </section>
     </>
   );

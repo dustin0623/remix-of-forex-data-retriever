@@ -8,6 +8,10 @@ const labels: Record<ChangeType, string> = {
   actual_released: "Actual released",
   actual_revised: "Actual revised",
   forecast_revised: "Forecast revised",
+  forecast_changed: "Forecast changed",
+  previous_changed: "Previous revised",
+  impact_changed: "Impact changed",
+  event_updated: "Time changed",
 };
 
 export function RecentChanges({ changes, loading, limit = 8 }: { changes?: EventChange[] | undefined; loading?: boolean; limit?: number }) {

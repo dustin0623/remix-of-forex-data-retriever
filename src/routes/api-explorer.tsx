@@ -149,7 +149,7 @@ const endpoints: Endpoint[] = [
 function ApiExplorer() {
   const [selected, setSelected] = useState(0);
   const endpoint = endpoints[selected] ?? endpoints[0]!;
-  const apiEndpoint = useSettingsStore((s) => s.apiEndpoint);
+  const apiEndpoint = useSettingsStore((s) => s.apiBaseUrl);
 
   return (
     <>
