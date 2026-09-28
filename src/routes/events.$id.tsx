@@ -1,15 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowLeft, Play, RotateCcw } from "lucide-react";
+import { ArrowLeft, PencilLine, Play, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState, PageHeader } from "@/components/market/PageHeader";
 import { ImpactBadge, RelevanceMeter, SimulatedTag } from "@/components/market/badges";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { simulateActual } from "@/mock/events";
-import { eventQuery } from "@/services/marketService";
-import { useSimulationStore } from "@/stores/simulationStore";
+import { eventQuery, useSimulationActions } from "@/services/marketService";
 
 export const Route = createFileRoute("/events/$id")({
   head: () => ({
@@ -41,9 +39,8 @@ function Field({ label, value, mono = true }: { label: string; value: React.Reac
 function EventDetails() {
   const { id } = Route.useParams();
   const { data: event, isLoading, isError, refetch } = useQuery(eventQuery(id));
-  const released = useSimulationStore((s) => s.releasedActuals[id]);
-  const release = useSimulationStore((s) => s.release);
-  const reset = useSimulationStore((s) => s.reset);
+  const { release, update, reset } = useSimulationActions();
+  const busy = release.isPending || update.isPending || reset.isPending;
 
   if (isLoading) {
     return (
@@ -67,7 +64,7 @@ function EventDetails() {
     );
   }
 
-  const actual = released ?? event.actual;
+  const actual = event.actual;
 
   return (
     <>
@@ -94,7 +91,7 @@ function EventDetails() {
           <Field label="Actual" value={actual ?? "Not released"} />
           <Field label="Forecast" value={event.forecast ?? "—"} />
           <Field label="Previous" value={event.previous ?? "—"} />
-          <Field label="Scheduled" value={event.time} />
+          <Field label="Status" value={event.status} />
           <Field
             label="Gold relevance"
             value={<RelevanceMeter level={event.goldRelevance} label="Gold relevance" />}
@@ -111,23 +108,46 @@ function EventDetails() {
 
         <div className="mt-5 flex flex-wrap items-center gap-3 border-t border-border pt-4">
           <Button
-            onClick={() => {
-              const value = simulateActual(event);
-              release(event.id, value);
-              toast.success("Simulated release applied", {
-                description: `${event.title} actual set to ${value} (local simulation only).`,
-              });
-            }}
+            disabled={busy || event.actual !== null}
+            onClick={() =>
+              release.mutate(event.id, {
+                onSuccess: ({ change }) =>
+                  toast.success("Simulated release applied", {
+                    description: `${event.title}: actual ${change.newValue}`,
+                  }),
+                onError: (e) => toast.error(e.message),
+              })
+            }
           >
             <Play className="size-4" aria-hidden />
             Simulate release
           </Button>
-          {released ? (
-            <Button variant="outline" onClick={() => reset(event.id)}>
-              <RotateCcw className="size-4" aria-hidden />
-              Revert to unreleased
-            </Button>
-          ) : null}
+          <Button
+            variant="outline"
+            disabled={busy}
+            onClick={() =>
+              update.mutate(event.id, {
+                onSuccess: ({ change }) =>
+                  toast.success(change.field === "actual" ? "Actual revised" : "Forecast changed", {
+                    description: `${change.previousValue ?? "—"} → ${change.newValue ?? "—"}`,
+                  }),
+                onError: (e) => toast.error(e.message),
+              })
+            }
+          >
+            <PencilLine className="size-4" aria-hidden />
+            {event.actual !== null ? "Simulate revision" : "Simulate forecast change"}
+          </Button>
+          <Button
+            variant="ghost"
+            disabled={busy}
+            onClick={() =>
+              reset.mutate(undefined, { onSuccess: () => toast.success("Simulation reset for all events") })
+            }
+          >
+            <RotateCcw className="size-4" aria-hidden />
+            Reset simulation
+          </Button>
           <p className="text-xs text-muted-foreground">
             Generates a local value only. No external request is made.
           </p>

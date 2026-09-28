@@ -3,7 +3,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { EmptyState } from "@/components/market/PageHeader";
 import { ImpactBadge, RelevanceMeter } from "@/components/market/badges";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useSimulationStore } from "@/stores/simulationStore";
 import type { EconomicEvent } from "@/types/market";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +27,6 @@ export function EventsTable({
   emptyTitle?: string;
 }) {
   const navigate = useNavigate();
-  const released = useSimulationStore((s) => s.releasedActuals);
 
   if (loading) {
     return (
@@ -66,7 +64,7 @@ export function EventsTable({
         </thead>
         <tbody>
           {events.map((event) => {
-            const actual = released[event.id] ?? event.actual;
+            const actual = event.actual;
             return (
               <tr
                 key={event.id}
@@ -98,6 +96,9 @@ export function EventsTable({
                   )}
                 >
                   {actual ?? "—"}
+                  {event.status === "UPDATED" ? (
+                    <span className="ml-1 text-[10px] uppercase text-warn" title="Revised after publication">rev</span>
+                  ) : null}
                 </td>
                 <td className="num px-3 py-2 text-right text-muted-foreground">{event.forecast ?? "—"}</td>
                 <td className="num px-3 py-2 text-right text-muted-foreground">{event.previous ?? "—"}</td>

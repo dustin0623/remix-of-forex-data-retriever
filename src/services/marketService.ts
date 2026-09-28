@@ -1,23 +1,11 @@
-import { queryOptions } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { mockApiStatus, mockDashboardAnalysis, mockGoldAnalysis, mockSnapshot } from "@/mock/analysis";
-import { mockChanges, mockEvents } from "@/mock/events";
-import type { ApiStatus, EconomicEvent, EventChange, MarketAnalysis, MarketSnapshot } from "@/types/market";
+import { apiClient } from "@/services/api/apiClient";
 
 /**
- * Simulated transport layer.
- *
- * Every function here resolves from the mock modules with a small artificial
- * latency so loading states are real. To go live in a later phase, replace the
- * bodies with fetch calls to the /scrapper API — the signatures and the query
- * keys below stay identical, so no UI has to change.
+ * React Query bindings over the apiClient. Query keys and signatures stay
+ * stable when the apiClient implementation changes from simulation to real API.
  */
-
-const LATENCY_MS = 280;
-
-function simulateRequest<T>(data: T, latency = LATENCY_MS): Promise<T> {
-  return new Promise((resolve) => setTimeout(() => resolve(data), latency));
-}
 
 export function isSameDay(iso: string, offsetDays = 0): boolean {
   const target = new Date();
@@ -30,62 +18,40 @@ export function isSameDay(iso: string, offsetDays = 0): boolean {
   );
 }
 
-function byTime(a: EconomicEvent, b: EconomicEvent) {
-  return new Date(a.datetime).getTime() - new Date(b.datetime).getTime();
-}
-
-async function fetchEvents(): Promise<EconomicEvent[]> {
-  return simulateRequest([...mockEvents].sort(byTime));
-}
-
 export const eventsQuery = () =>
-  queryOptions({ queryKey: ["events"], queryFn: fetchEvents, staleTime: 60_000 });
+  queryOptions({ queryKey: ["events", "all"], queryFn: () => apiClient.getCalendar("all") });
 
 export const todayEventsQuery = () =>
-  queryOptions({
-    queryKey: ["events", "today"],
-    queryFn: async () => (await fetchEvents()).filter((e) => isSameDay(e.datetime, 0)),
-    staleTime: 60_000,
-  });
+  queryOptions({ queryKey: ["events", "today"], queryFn: () => apiClient.getCalendar("today") });
 
 export const eventQuery = (id: string) =>
-  queryOptions({
-    queryKey: ["events", id],
-    queryFn: async () => (await fetchEvents()).find((e) => e.id === id) ?? null,
-    staleTime: 60_000,
-  });
+  queryOptions({ queryKey: ["events", "detail", id], queryFn: () => apiClient.getEvent(id) });
 
 export const snapshotQuery = () =>
-  queryOptions({
-    queryKey: ["snapshot"],
-    queryFn: (): Promise<MarketSnapshot> => simulateRequest(mockSnapshot),
-    staleTime: 60_000,
-  });
+  queryOptions({ queryKey: ["market", "snapshot"], queryFn: () => apiClient.getMarketSnapshot() });
+
+export const timelineQuery = () =>
+  queryOptions({ queryKey: ["market", "timeline"], queryFn: () => apiClient.getMarketTimeline() });
 
 export const dashboardAnalysisQuery = () =>
-  queryOptions({
-    queryKey: ["analysis", "dashboard"],
-    queryFn: (): Promise<MarketAnalysis> => simulateRequest(mockDashboardAnalysis, 600),
-    staleTime: 60_000,
-  });
+  queryOptions({ queryKey: ["analysis", "dashboard"], queryFn: () => apiClient.getMarketAnalysis("dashboard") });
 
 export const goldAnalysisQuery = () =>
-  queryOptions({
-    queryKey: ["analysis", "gold"],
-    queryFn: (): Promise<MarketAnalysis> => simulateRequest(mockGoldAnalysis, 600),
-    staleTime: 60_000,
-  });
+  queryOptions({ queryKey: ["analysis", "gold"], queryFn: () => apiClient.getMarketAnalysis("gold") });
 
 export const changesQuery = () =>
-  queryOptions({
-    queryKey: ["changes"],
-    queryFn: (): Promise<EventChange[]> => simulateRequest(mockChanges),
-    staleTime: 60_000,
-  });
+  queryOptions({ queryKey: ["changes"], queryFn: () => apiClient.getChanges() });
 
 export const apiStatusQuery = () =>
-  queryOptions({
-    queryKey: ["api-status"],
-    queryFn: (): Promise<ApiStatus> => simulateRequest(mockApiStatus, 150),
-    staleTime: 30_000,
-  });
+  queryOptions({ queryKey: ["api-status"], queryFn: () => apiClient.getStatus(), staleTime: 30_000 });
+
+/** Simulation controls; every success refreshes all market queries. */
+export function useSimulationActions() {
+  const qc = useQueryClient();
+  const onSuccess = () => qc.invalidateQueries();
+  return {
+    release: useMutation({ mutationFn: (id: string) => apiClient.simulateRelease(id), onSuccess }),
+    update: useMutation({ mutationFn: (id: string) => apiClient.simulateUpdate(id), onSuccess }),
+    reset: useMutation({ mutationFn: () => apiClient.resetSimulation(), onSuccess }),
+  };
+}

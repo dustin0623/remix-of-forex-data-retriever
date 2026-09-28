@@ -2,6 +2,7 @@ import { create } from "zustand";
 
 export interface SettingsState {
   simulationMode: boolean;
+  dataSource: "simulation" | "external";
   theme: "dark" | "system";
   apiEndpoint: string;
   aiProvider: string;
@@ -13,6 +14,7 @@ export interface SettingsState {
 /** Client-only preferences. Nothing here connects to a real service yet. */
 export const useSettingsStore = create<SettingsState>((set) => ({
   simulationMode: true,
+  dataSource: "simulation",
   theme: "dark",
   apiEndpoint: "http://localhost:4000",
   aiProvider: "Not configured",
