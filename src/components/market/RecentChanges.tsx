@@ -10,7 +10,7 @@ const labels: Record<ChangeType, string> = {
   forecast_revised: "Forecast revised",
 };
 
-export function RecentChanges({ changes, loading, limit = 8 }: { changes?: EventChange[]; loading?: boolean; limit?: number }) {
+export function RecentChanges({ changes, loading, limit = 8 }: { changes?: EventChange[] | undefined; loading?: boolean; limit?: number }) {
   if (loading) {
     return (
       <div className="space-y-2 p-4">

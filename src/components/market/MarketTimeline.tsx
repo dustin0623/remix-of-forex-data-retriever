@@ -4,7 +4,7 @@ import type { TimelinePoint } from "@/types/market";
 const W = 800;
 const H = 140;
 
-export function MarketTimeline({ points, loading }: { points?: TimelinePoint[]; loading?: boolean }) {
+export function MarketTimeline({ points, loading }: { points?: TimelinePoint[] | undefined; loading?: boolean }) {
   if (loading || !points) return <Skeleton className="m-5 h-36" />;
   if (points.length < 2) return <p className="p-5 text-sm text-muted-foreground">Not enough data yet today.</p>;
 
