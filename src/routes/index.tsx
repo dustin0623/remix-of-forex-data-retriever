@@ -172,7 +172,7 @@ function Dashboard() {
 
       <AnalysisCard
         analysis={analysis.data}
-        loading={aiConfigured && (analysis.isLoading || week.isLoading)}
+        loading={aiConfigured && analysis.isLoading}
         needsKey={!aiConfigured}
       />
     </>
