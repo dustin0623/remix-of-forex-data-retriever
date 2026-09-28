@@ -96,7 +96,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="flex items-center gap-2">
               <Activity className="size-3.5" aria-hidden />
               {simulationMode
-                ? "Simulation mode — calendar events are real (Forex Factory + MetalsMine); simulated releases and the XAUUSD price are local what-ifs. Not advice."
+                ? "Simulation mode — calendar events are real (Forex Factory + MetalsMine) and the XAUUSD price is live (Binance PAXG/USDT); only simulated releases are local what-ifs. Not advice."
                 : "Live API mode — data comes from your scrapper server. Not advice."}
             </div>
           </footer>

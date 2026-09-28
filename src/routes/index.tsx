@@ -11,6 +11,7 @@ import { StatCard } from "@/components/market/StatCard";
 import { SimulatedTag } from "@/components/market/badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { changesQuery, dashboardAnalysisQuery, snapshotQuery, timelineQuery, todayEventsQuery } from "@/services/marketService";
+import { useAiConfigured } from "@/stores/settingsStore";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -19,12 +20,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Simulated macro dashboard: today's economic events, XAUUSD snapshot and a mock market overview.",
+          "Macro dashboard: today's real Forex Factory + MetalsMine events, live XAUUSD price and AI market overview.",
       },
       { property: "og:title", content: "Dashboard — Forex Market Intelligence" },
       {
         property: "og:description",
-        content: "Simulated macro dashboard for USD events and gold-relevant releases.",
+        content: "Real economic calendar, live gold price and AI-driven market overview for XAUUSD traders.",
       },
     ],
   }),
@@ -34,9 +35,10 @@ export const Route = createFileRoute("/")({
 function Dashboard() {
   const events = useQuery(todayEventsQuery());
   const snapshot = useQuery(snapshotQuery());
-  const analysis = useQuery(dashboardAnalysisQuery());
   const changes = useQuery(changesQuery());
   const timeline = useQuery(timelineQuery());
+  const aiConfigured = useAiConfigured();
+  const analysis = useQuery({ ...dashboardAnalysisQuery(), enabled: aiConfigured, staleTime: 10 * 60_000 });
 
   const list = events.data ?? [];
   const highImpact = list.filter((e) => e.impact === "high");
@@ -50,8 +52,8 @@ function Dashboard() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Session overview built entirely from simulated data. Nothing here is a live market feed."
-        actions={<SimulatedTag label="Simulated data" />}
+        description="Real Forex Factory + MetalsMine calendar and live gold price (Binance PAXG/USDT). Release outcomes stay simulated until you sync."
+        actions={<SimulatedTag label="Simulation · real calendar" />}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -168,7 +170,11 @@ function Dashboard() {
         </section>
       </div>
 
-      <AnalysisCard analysis={analysis.data} loading={analysis.isLoading} />
+      <AnalysisCard
+        analysis={analysis.data}
+        loading={aiConfigured && analysis.isLoading}
+        needsKey={!aiConfigured}
+      />
     </>
   );
 }
