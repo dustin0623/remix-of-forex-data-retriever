@@ -26,3 +26,4 @@
 - Simulation mode's baseline is the real FF+MetalsMine weekly feed fetched via `src/lib/calendar.functions.ts` (5-min server cache, stale fallback, localStorage snapshot); what-ifs stay local overrides — no separate backend needed for real data.
 - AI is bring-your-own-key (Gemini/OpenAI/Anthropic) via `src/lib/ai.functions.ts`; keys live in the browser settings store and are sent per request, never stored or logged server-side.
 - XAUUSD price/timeline come from Binance PAXG/USDT via `src/lib/gold.functions.ts` (30s server cache, data-api.binance.vision mirror first); both modes use it, simulation falls back to the synthetic price — avoids scraping Cloudflare-protected MetalsMine.
+- News: Al Jazeera RSS + SM_News_24h Telegram web preview via `src/lib/news.server.ts` (3-min cache, per-source stale fallback), mirrored at scrapper `GET /api/news`; all headlines shown, AI (`analyzeNews`) only flags relevance on demand, never hides items.
