@@ -169,11 +169,15 @@ function AiSettings() {
           <a href={meta.keyUrl} target="_blank" rel="noreferrer" className="text-xs text-primary underline">Get a key</a>
         </div>
       </Row>
-      <Row title="Model" description="Pick a model or type any model name your key supports.">
-        <div className="space-y-1.5">
-          <Input list={`models-${aiProvider}`} value={aiModels[aiProvider]} onChange={(e) => setAiModel(aiProvider, e.target.value)} className="num" />
-          <datalist id={`models-${aiProvider}`}>{meta.models.map((m) => <option key={m} value={m} />)}</datalist>
-        </div>
+      <Row title="Model" description="Pick the model to use with your key.">
+        <Select value={aiModels[aiProvider]} onValueChange={(v) => setAiModel(aiProvider, v)}>
+          <SelectTrigger aria-label="Model" className="num"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {meta.models.map((m) => (
+              <SelectItem key={m} value={m} className="num">{m}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Row>
       <Row title="Post style" description="Tone of generated master posts.">
         <Select value={postStyle} onValueChange={(v) => setPostStyle(v as PostStyle)}>
