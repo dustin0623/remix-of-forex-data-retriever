@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 export type Database = DatabaseSync;
 
 /** Bump when the schema changes incompatibly. Older local DBs are rebuilt (cache data only). */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS events (
