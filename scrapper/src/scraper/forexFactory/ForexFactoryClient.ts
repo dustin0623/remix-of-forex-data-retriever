@@ -3,6 +3,8 @@ import { consoleLogger, type ScraperLogger } from "./types.js";
 export interface ForexFactoryClientOptions {
   exportUrl: string;
   htmlUrl: string;
+  /** MetalsMine weekly JSON export (same Fair Economy format). */
+  metalsExportUrl?: string;
   userAgent: string;
   timeoutMs: number;
   maxRetries: number;
