@@ -21,4 +21,4 @@
   interface); the mock implementation delegates to `src/services/mock/simulationService.ts`, which holds
   session-persisted event state + change log, so Phase 3 swaps in the real API by adding one implementation.
 
-- `/scrapper` is a standalone Fastify API (own package.json, node:sqlite, Vitest) outside the frontend build; routes -> CalendarService -> CalendarProvider/EventRepository so the mock provider can be swapped for the real scraper.
+- `/scrapper` is a standalone Fastify API (own package.json, node:sqlite, Vitest) outside the frontend build; routes -> CalendarService -> CalendarProvider/EventRepository selected by CALENDAR_PROVIDER; Forex Factory uses the JSON export as primary source and HTML only to enrich actuals, with relevance in GoldRelevanceService (never the parser).
