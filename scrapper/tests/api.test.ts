@@ -46,7 +46,25 @@ describe("calendar endpoints", () => {
     const gold = await get("/api/calendar/gold-relevant");
     expect(gold.body.data.every((e: { goldRelevance: string }) => ["high", "medium"].includes(e.goldRelevance))).toBe(true);
   });
+
+  it("filters by source, keeping events present in both feeds", async () => {
+    const all = await get("/api/calendar/week");
+    const ff = await get("/api/calendar/week?source=forexfactory");
+    const mm = await get("/api/calendar/week?source=metalsmine");
+    type E = { source: string };
+    expect(ff.body.data.every((e: E) => ["forexfactory", "both"].includes(e.source))).toBe(true);
+    expect(mm.body.data.every((e: E) => ["metalsmine", "both"].includes(e.source))).toBe(true);
+    expect(mm.body.data.length).toBeGreaterThan(0);
+    expect(mm.body.data.length).toBeLessThan(all.body.data.length);
+  });
+
+  it("rejects an unknown source filter", async () => {
+    const { status, body } = await get("/api/calendar/week?source=nasdaq");
+    expect(status).toBe(400);
+    expect(body.error.code).toBe("INVALID_SOURCE");
+  });
 });
+
 
 describe("event lookup", () => {
   it("finds an event by id", async () => {

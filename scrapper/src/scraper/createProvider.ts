@@ -5,7 +5,7 @@ import { ForexFactoryClient } from "./forexFactory/ForexFactoryClient.js";
 import { ForexFactoryProvider } from "./forexFactory/ForexFactoryProvider.js";
 import type { ScraperLogger } from "./forexFactory/types.js";
 
-/** CALENDAR_PROVIDER=forexfactory selects the real source (only if SCRAPER_ENABLED). */
+/** CALENDAR_PROVIDER=forexfactory selects the real sources (only if SCRAPER_ENABLED). */
 export function createProvider(config: AppConfig, logger?: ScraperLogger): CalendarProvider {
   if (config.calendarProvider !== "forexfactory" || !config.scraperEnabled) {
     return new MockCalendarProvider();
@@ -14,6 +14,7 @@ export function createProvider(config: AppConfig, logger?: ScraperLogger): Calen
   const client = new ForexFactoryClient({
     exportUrl: s.exportUrl,
     htmlUrl: s.htmlUrl,
+    metalsExportUrl: s.metalsExportUrl,
     userAgent: s.userAgent,
     timeoutMs: s.timeoutMs,
     maxRetries: s.maxRetries,
@@ -24,6 +25,7 @@ export function createProvider(config: AppConfig, logger?: ScraperLogger): Calen
     client,
     minIntervalMs: s.minIntervalMs,
     enrichActuals: s.enrichActuals,
+    sources: s.sources,
     ...(logger ? { logger } : {}),
   });
 }

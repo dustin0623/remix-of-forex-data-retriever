@@ -6,13 +6,14 @@ import { createProvider } from "../src/scraper/createProvider.js";
 import { MockCalendarProvider } from "../src/scraper/MockCalendarProvider.js";
 import { ForexFactoryClient, UpstreamError } from "../src/scraper/forexFactory/ForexFactoryClient.js";
 import {
-  buildEventId, mergeActuals, normalizeImpact, parseCalendarHtml, parseExport,
+  buildEventId, mergeActuals, mergeFeeds, normalizeImpact, parseCalendarHtml, parseExport,
 } from "../src/scraper/forexFactory/ForexFactoryParser.js";
 import { ForexFactoryProvider } from "../src/scraper/forexFactory/ForexFactoryProvider.js";
 import type { ScraperLogger } from "../src/scraper/forexFactory/types.js";
 import { GoldRelevanceService } from "../src/services/goldRelevanceService.js";
 
 const exportJson = JSON.parse(readFileSync(new URL("./fixtures/ff_export.json", import.meta.url), "utf8"));
+const metalsJson = JSON.parse(readFileSync(new URL("./fixtures/mm_export.json", import.meta.url), "utf8"));
 const html = readFileSync(new URL("./fixtures/ff_calendar.html", import.meta.url), "utf8");
 const silent: ScraperLogger = { info() {}, warn() {}, error() {} };
 
@@ -57,6 +58,33 @@ describe("ForexFactoryParser", () => {
     expect(merged.find((e) => e.event.startsWith("Non-Farm"))!.actual).toBeNull();
   });
 
+  it("tags the feed each event came from", () => {
+    expect(parseExport(metalsJson, "metalsmine").events[0]).toMatchObject({
+      source: "metalsmine",
+      metalsImpact: "medium",
+    });
+    expect(parseExport(exportJson).events[0]).toMatchObject({
+      source: "forexfactory",
+      metalsImpact: null,
+    });
+  });
+
+  it("merges both feeds into one calendar, keeping the strongest impact", () => {
+    const ff = parseExport(exportJson).events;
+    const mm = parseExport(metalsJson, "metalsmine").events;
+    const merged = mergeFeeds(ff, mm);
+    // Core PCE is in both feeds: one entry, tagged "both".
+    const pce = merged.filter((e) => e.event.startsWith("Core PCE"));
+    expect(pce).toHaveLength(1);
+    expect(pce[0]).toMatchObject({ source: "both", impact: "high", metalsImpact: "medium" });
+    // Metals-only events survive, forex-only events survive.
+    expect(merged.find((e) => e.event === "LME Copper Inventories")!.source).toBe("metalsmine");
+    expect(merged.find((e) => e.event.startsWith("Non-Farm"))!.source).toBe("forexfactory");
+    expect(merged.map((e) => e.datetime)).toEqual([...merged.map((e) => e.datetime)].sort());
+  });
+
+
+
   it("normalizes impact labels and icon classes", () => {
     expect(normalizeImpact("High")).toBe("high");
     expect(normalizeImpact("icon--ff-impact-ora")).toBe("medium");
@@ -86,17 +114,25 @@ describe("GoldRelevanceService", () => {
   });
 });
 
-function fakeClient(opts: { exportFail?: boolean; htmlFail?: boolean } = {}) {
+function fakeClient(opts: { exportFail?: boolean; htmlFail?: boolean; metalsFail?: boolean } = {}) {
   return {
     fetchWeekExport: vi.fn(async () => {
       if (opts.exportFail) throw new UpstreamError("down", 503);
       return exportJson;
     }),
+    fetchMetalsExport: vi.fn(async () => {
+      if (opts.metalsFail) throw new UpstreamError("down", 503);
+      return metalsJson;
+    }),
     fetchWeekHtml: vi.fn(async () => {
       if (opts.htmlFail) throw new UpstreamError("blocked", 403);
       return html;
     }),
-  } as unknown as ForexFactoryClient & { fetchWeekExport: ReturnType<typeof vi.fn>; fetchWeekHtml: ReturnType<typeof vi.fn> };
+  } as unknown as ForexFactoryClient & {
+    fetchWeekExport: ReturnType<typeof vi.fn>;
+    fetchMetalsExport: ReturnType<typeof vi.fn>;
+    fetchWeekHtml: ReturnType<typeof vi.fn>;
+  };
 }
 
 describe("ForexFactoryProvider", () => {
@@ -120,12 +156,34 @@ describe("ForexFactoryProvider", () => {
   it("falls back to export-only data when HTML is blocked", async () => {
     const p = new ForexFactoryProvider({ client: fakeClient({ htmlFail: true }), minIntervalMs: 900_000, enrichActuals: true, logger: silent });
     const week = await p.getWeek();
-    expect(week).toHaveLength(5);
+    expect(week).toHaveLength(7);
     expect(week.every((e) => e.actual === null)).toBe(true);
   });
 
-  it("throws a clean 503 when upstream fails", async () => {
-    const p = new ForexFactoryProvider({ client: fakeClient({ exportFail: true }), minIntervalMs: 900_000, enrichActuals: false, logger: silent });
+  it("combines both feeds and exposes source attribution", async () => {
+    const p = new ForexFactoryProvider({ client: fakeClient(), enrichActuals: false, logger: silent });
+    const week = await p.getWeek();
+    for (const e of week) expect(EconomicEventSchema.safeParse(e).success).toBe(true);
+    expect(week.find((e) => e.title.startsWith("Core PCE"))).toMatchObject({ source: "both", metalsImpact: "medium" });
+    expect(week.filter((e) => e.source === "metalsmine")).toHaveLength(2);
+  });
+
+  it("keeps serving one feed when the other fails", async () => {
+    const p = new ForexFactoryProvider({ client: fakeClient({ metalsFail: true }), enrichActuals: false, logger: silent });
+    const week = await p.getWeek();
+    expect(week).toHaveLength(5);
+    expect(week.every((e) => e.source === "forexfactory")).toBe(true);
+  });
+
+  it("only fetches the configured sources", async () => {
+    const client = fakeClient();
+    const p = new ForexFactoryProvider({ client, enrichActuals: false, sources: ["metalsmine"], logger: silent });
+    expect(await p.getWeek()).toHaveLength(3);
+    expect(client.fetchWeekExport).not.toHaveBeenCalled();
+  });
+
+  it("throws a clean 503 when every source fails", async () => {
+    const p = new ForexFactoryProvider({ client: fakeClient({ exportFail: true, metalsFail: true }), minIntervalMs: 900_000, enrichActuals: false, logger: silent });
     await expect(p.getWeek()).rejects.toMatchObject({ statusCode: 503, code: "UPSTREAM_UNAVAILABLE" });
   });
 });
@@ -156,8 +214,12 @@ describe("provider selection", () => {
   it("defaults to mock", () => {
     expect(createProvider(loadConfig({}))).toBeInstanceOf(MockCalendarProvider);
   });
-  it("selects forexfactory via CALENDAR_PROVIDER", () => {
-    expect(createProvider(loadConfig({ CALENDAR_PROVIDER: "forexfactory" }), silent).name).toBe("forexfactory");
+  it("selects the combined Fair Economy provider via CALENDAR_PROVIDER", () => {
+    expect(createProvider(loadConfig({ CALENDAR_PROVIDER: "forexfactory" }), silent).name).toBe("faireconomy");
+  });
+  it("reads the enabled sources from SCRAPER_SOURCES", () => {
+    expect(loadConfig({}).scraper.sources).toEqual(["forexfactory", "metalsmine"]);
+    expect(loadConfig({ SCRAPER_SOURCES: "metalsmine" }).scraper.sources).toEqual(["metalsmine"]);
   });
   it("uses mock when scraper is disabled", () => {
     expect(createProvider(loadConfig({ CALENDAR_PROVIDER: "forexfactory", SCRAPER_ENABLED: "false" }))).toBeInstanceOf(MockCalendarProvider);

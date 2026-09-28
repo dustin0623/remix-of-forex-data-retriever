@@ -5,7 +5,7 @@ import { DatabaseSync } from "node:sqlite";
 export type Database = DatabaseSync;
 
 /** Bump when the schema changes incompatibly. Older local DBs are rebuilt (cache data only). */
-const SCHEMA_VERSION = 2;
+const SCHEMA_VERSION = 3;
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS events (
@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS events (
   event TEXT NOT NULL,
   currency TEXT NOT NULL,
   impact TEXT NOT NULL,
+  metals_impact TEXT,
   datetime TEXT NOT NULL,
   actual TEXT,
   forecast TEXT,
@@ -30,6 +31,8 @@ CREATE TABLE IF NOT EXISTS events (
 CREATE INDEX IF NOT EXISTS idx_events_datetime ON events(datetime);
 CREATE INDEX IF NOT EXISTS idx_events_currency_impact ON events(currency, impact);
 CREATE INDEX IF NOT EXISTS idx_events_gold ON events(gold_relevance);
+CREATE INDEX IF NOT EXISTS idx_events_source ON events(source);
+
 
 CREATE TABLE IF NOT EXISTS event_snapshots (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

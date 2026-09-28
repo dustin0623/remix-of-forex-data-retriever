@@ -36,6 +36,11 @@ function Field({ label, value, mono = true }: { label: string; value: React.Reac
   );
 }
 
+/** Which upstream calendar carried this event. */
+const feedLabel = (feed: EconomicEvent["feed"]) =>
+  feed === "both" ? "Forex Factory + MetalsMine" : feed === "metalsmine" ? "MetalsMine" : "Forex Factory";
+
+
 function EventDetails() {
   const { id } = Route.useParams();
   const { data: event, isLoading, isError, refetch } = useQuery(eventQuery(id));
@@ -75,7 +80,7 @@ function EventDetails() {
 
       <PageHeader
         title={event.title}
-        description={`${event.currency} · ${new Date(event.datetime).toLocaleString()} · ${event.source}`}
+        description={`${event.currency} · ${new Date(event.datetime).toLocaleString()} · ${event.source} · ${feedLabel(event.feed)}`}
         actions={
           <div className="flex items-center gap-2">
             <ImpactBadge impact={event.impact} />

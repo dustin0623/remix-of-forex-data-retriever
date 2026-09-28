@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { eventsQuery } from "@/services/marketService";
+import type { SourceFilter } from "@/types/market";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
@@ -51,6 +52,7 @@ function CalendarPage() {
   const [currency, setCurrency] = useState("all");
   const [impact, setImpact] = useState("all");
   const [gold, setGold] = useState("all");
+  const [feed, setFeed] = useState<SourceFilter>("all");
   const [search, setSearch] = useState("");
 
   const filtered = useMemo(() => {
@@ -61,16 +63,19 @@ function CalendarPage() {
       if (impact !== "all" && e.impact !== impact) return false;
       if (gold === "relevant" && (e.goldRelevance === "none" || e.goldRelevance === "low")) return false;
       if (gold !== "all" && gold !== "relevant" && e.goldRelevance !== gold) return false;
+      // Events carried by both calendars stay visible under either source.
+      if (feed !== "all" && e.feed !== feed && e.feed !== "both") return false;
       if (search && !e.title.toLowerCase().includes(search.toLowerCase())) return false;
       return true;
     });
-  }, [events.data, date, currency, impact, gold, search]);
+  }, [events.data, date, currency, impact, gold, feed, search]);
 
   const reset = () => {
     setDate("");
     setCurrency("all");
     setImpact("all");
     setGold("all");
+    setFeed("all");
     setSearch("");
   };
 
@@ -83,13 +88,28 @@ function CalendarPage() {
       />
 
       <section className="panel p-4">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
           <div className="space-y-1.5">
             <Label htmlFor="cal-date" className="text-xs uppercase tracking-wider text-muted-foreground">
               Date
             </Label>
             <Input id="cal-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Calendar</Label>
+            <Select value={feed} onValueChange={(v) => setFeed(v as SourceFilter)}>
+              <SelectTrigger aria-label="Calendar source">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All calendars</SelectItem>
+                <SelectItem value="forexfactory">Forex Factory</SelectItem>
+                <SelectItem value="metalsmine">MetalsMine</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
 
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Currency</Label>

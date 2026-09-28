@@ -1,5 +1,7 @@
 import type { EventRepository } from "../database/repository.js";
-import type { ChangesQuery, EconomicEvent, EventChange, EventSnapshot, ResponseMeta } from "../models/schemas.js";
+import type {
+  ChangesQuery, EconomicEvent, EventChange, EventSnapshot, ResponseMeta, SourceFilter,
+} from "../models/schemas.js";
 import type { CalendarProvider } from "../scraper/CalendarProvider.js";
 import { addDays, isSameUtcDay, startOfUtcDay } from "../utils/dates.js";
 import { ApiError } from "../utils/response.js";
@@ -19,6 +21,10 @@ export interface CalendarServiceOptions {
 
 const GOLD = ["very_high", "high", "medium"];
 const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/** "both" events belong to each feed, so they survive every source filter. */
+const matchesSource = (e: EconomicEvent, source: SourceFilter): boolean =>
+  source === "all" || e.source === source || e.source === "both";
 
 /**
  * Single entry point for calendar data. Fetches the provider's week at most once per
@@ -76,21 +82,26 @@ export class CalendarService {
     }
   }
 
-  private async filtered(pred: (e: EconomicEvent) => boolean): Promise<CalendarResult<EconomicEvent[]>> {
+  private async filtered(
+    pred: (e: EconomicEvent) => boolean,
+    source: SourceFilter = "all",
+  ): Promise<CalendarResult<EconomicEvent[]>> {
     const r = await this.week();
-    return { data: r.data.filter(pred), meta: r.meta };
+    return { data: r.data.filter((e) => pred(e) && matchesSource(e, source)), meta: r.meta };
   }
 
-  today() {
+  today(source: SourceFilter = "all") {
     const d = startOfUtcDay(this.now());
-    return this.filtered((e) => isSameUtcDay(e.datetime, d));
+    return this.filtered((e) => isSameUtcDay(e.datetime, d), source);
   }
-  tomorrow() {
+  tomorrow(source: SourceFilter = "all") {
     const d = addDays(startOfUtcDay(this.now()), 1);
-    return this.filtered((e) => isSameUtcDay(e.datetime, d));
+    return this.filtered((e) => isSameUtcDay(e.datetime, d), source);
   }
-  highImpact() { return this.filtered((e) => e.impact === "high"); }
-  goldRelevant() { return this.filtered((e) => GOLD.includes(e.goldRelevance)); }
+  highImpact(source: SourceFilter = "all") { return this.filtered((e) => e.impact === "high", source); }
+  goldRelevant(source: SourceFilter = "all") { return this.filtered((e) => GOLD.includes(e.goldRelevance), source); }
+  /** The full week, optionally narrowed to one upstream feed. */
+  weekBySource(source: SourceFilter = "all") { return this.filtered(() => true, source); }
 
   async byId(id: string): Promise<EconomicEvent | null> {
     const stored = this.repo.findById(id);

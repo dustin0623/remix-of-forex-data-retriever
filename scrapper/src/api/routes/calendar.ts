@@ -1,18 +1,27 @@
 import type { FastifyInstance } from "fastify";
-import { ChangesQuerySchema, EventIdParamSchema } from "../../models/schemas.js";
+import { ChangesQuerySchema, EventIdParamSchema, SourceQuerySchema } from "../../models/schemas.js";
 import type { CalendarResult, CalendarService } from "../../services/calendarService.js";
 import { ApiError, ok } from "../../utils/response.js";
 
 const send = <T>(r: CalendarResult<T>) => ok(r.data, r.meta);
 
+/** ?source=all|forexfactory|metalsmine — "all" merges both Fair Economy feeds. */
+const parseSource = (query: unknown) => {
+  const parsed = SourceQuerySchema.safeParse(query ?? {});
+  if (!parsed.success) {
+    throw new ApiError(400, "INVALID_SOURCE", "source must be all, forexfactory or metalsmine");
+  }
+  return parsed.data.source;
+};
+
 export async function calendarRoutes(app: FastifyInstance, opts: { service: CalendarService }) {
   const s = opts.service;
 
-  app.get("/api/calendar/today", async () => send(await s.today()));
-  app.get("/api/calendar/tomorrow", async () => send(await s.tomorrow()));
-  app.get("/api/calendar/week", async () => send(await s.week()));
-  app.get("/api/calendar/high-impact", async () => send(await s.highImpact()));
-  app.get("/api/calendar/gold-relevant", async () => send(await s.goldRelevant()));
+  app.get("/api/calendar/today", async (req) => send(await s.today(parseSource(req.query))));
+  app.get("/api/calendar/tomorrow", async (req) => send(await s.tomorrow(parseSource(req.query))));
+  app.get("/api/calendar/week", async (req) => send(await s.weekBySource(parseSource(req.query))));
+  app.get("/api/calendar/high-impact", async (req) => send(await s.highImpact(parseSource(req.query))));
+  app.get("/api/calendar/gold-relevant", async (req) => send(await s.goldRelevant(parseSource(req.query))));
 
   const parseId = (params: unknown) => {
     const parsed = EventIdParamSchema.safeParse(params);

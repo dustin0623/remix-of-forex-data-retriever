@@ -16,7 +16,9 @@ export interface LiveEvent {
   previous: string | null;
   goldRelevance: LiveRelevance;
   usdRelevance: LiveRelevance;
+  /** Feed attribution: "forexfactory", "metalsmine" or "both". */
   source: string;
+  metalsImpact?: LiveImpact | null;
   description: string;
   history: { period: string; actual: string; forecast: string | null }[];
 }

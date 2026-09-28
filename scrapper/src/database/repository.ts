@@ -42,6 +42,7 @@ export interface EventRepository {
 
 type EventRow = {
   id: string; source: string; event: string; currency: string; impact: string; datetime: string;
+  metals_impact: string | null;
   actual: string | null; forecast: string | null; previous: string | null; gold_relevance: string;
   usd_relevance: string; status: string; description: string; content_hash: string;
   first_seen_at: string; last_seen_at: string; updated_at: string;
@@ -61,6 +62,7 @@ const rowToEvent = (r: EventRow): EconomicEvent => ({
   goldRelevance: r.gold_relevance as EconomicEvent["goldRelevance"],
   usdRelevance: r.usd_relevance as EconomicEvent["usdRelevance"],
   source: r.source,
+  metalsImpact: (r.metals_impact as EconomicEvent["metalsImpact"]) ?? null,
   description: r.description,
   history: [],
 });
@@ -85,22 +87,22 @@ export class SqliteEventRepository implements EventRepository {
   insertEvent(e: EconomicEvent, hash: string, now: string): void {
     this.db
       .prepare(
-        `INSERT INTO events (id, source, event, currency, impact, datetime, actual, forecast, previous,
+        `INSERT INTO events (id, source, event, currency, impact, metals_impact, datetime, actual, forecast, previous,
            gold_relevance, usd_relevance, status, description, content_hash, first_seen_at, last_seen_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(e.id, e.source, e.title, e.currency, e.impact, e.datetime, e.actual, e.forecast, e.previous,
+      .run(e.id, e.source, e.title, e.currency, e.impact, e.metalsImpact ?? null, e.datetime, e.actual, e.forecast, e.previous,
         e.goldRelevance, e.usdRelevance, e.status, e.description, hash, now, now, now);
   }
 
   updateEvent(e: EconomicEvent, hash: string, now: string): void {
     this.db
       .prepare(
-        `UPDATE events SET source=?, event=?, currency=?, impact=?, datetime=?, actual=?, forecast=?, previous=?,
+        `UPDATE events SET source=?, event=?, currency=?, impact=?, metals_impact=?, datetime=?, actual=?, forecast=?, previous=?,
            gold_relevance=?, usd_relevance=?, status=?, description=?, content_hash=?, last_seen_at=?, updated_at=?
          WHERE id=?`,
       )
-      .run(e.source, e.title, e.currency, e.impact, e.datetime, e.actual, e.forecast, e.previous,
+      .run(e.source, e.title, e.currency, e.impact, e.metalsImpact ?? null, e.datetime, e.actual, e.forecast, e.previous,
         e.goldRelevance, e.usdRelevance, e.status, e.description, hash, now, now, e.id);
   }
 

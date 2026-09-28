@@ -3,6 +3,8 @@ import { consoleLogger, type ScraperLogger } from "./types.js";
 export interface ForexFactoryClientOptions {
   exportUrl: string;
   htmlUrl: string;
+  /** MetalsMine weekly JSON export (same Fair Economy format). */
+  metalsExportUrl?: string;
   userAgent: string;
   timeoutMs: number;
   maxRetries: number;
@@ -36,9 +38,16 @@ export class ForexFactoryClient {
     return this.request(this.opts.exportUrl, "json");
   }
 
+  /** MetalsMine weekly export; resolves to [] when no URL is configured. */
+  fetchMetalsExport(): Promise<unknown> {
+    if (!this.opts.metalsExportUrl) return Promise.resolve([]);
+    return this.request(this.opts.metalsExportUrl, "json");
+  }
+
   fetchWeekHtml(): Promise<string> {
     return this.request(this.opts.htmlUrl, "text") as Promise<string>;
   }
+
 
   private async request(url: string, as: "json" | "text"): Promise<unknown> {
     let lastErr: unknown;
