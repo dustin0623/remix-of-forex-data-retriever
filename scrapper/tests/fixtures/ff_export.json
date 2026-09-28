@@ -1,0 +1,9 @@
+[
+  {"title":"Core PCE Price Index m/m","country":"USD","date":"2026-09-30T08:30:00-04:00","impact":"High","forecast":"0.2%","previous":"0.3%"},
+  {"title":"  Non-Farm   Employment Change ","country":"USD","date":"2026-10-02T08:30:00-04:00","impact":"High","forecast":"150K","previous":"142K"},
+  {"title":"German Prelim CPI m/m","country":"EUR","date":"2026-09-30T08:00:00+02:00","impact":"Medium","forecast":"0.1%","previous":""},
+  {"title":"FOMC Member Bowman Speaks","country":"USD","date":"2026-09-30T13:00:00-04:00","impact":"Low","forecast":"","previous":""},
+  {"title":"Bank Holiday","country":"CNY","date":"2026-10-01T00:00:00-04:00","impact":"Holiday","forecast":"","previous":""},
+  {"title":"Broken row","country":"USD","date":"not-a-date","impact":"High"},
+  {"country":"USD"}
+]
