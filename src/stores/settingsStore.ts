@@ -42,6 +42,10 @@ export interface SettingsState {
   aiKeys: Record<AiProvider, string>;
   aiModels: Record<AiProvider, string>;
   postStyle: PostStyle;
+  /** Myfxbook account used for the Community Outlook sentiment (browser only). */
+  myfxbookEmail: string;
+  myfxbookPassword: string;
+  setMyfxbook: (email: string, password: string) => void;
   setDataSource: (value: DataSource) => void;
   setTheme: (value: "dark" | "system") => void;
   setApiBaseUrl: (value: string) => void;
