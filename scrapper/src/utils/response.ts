@@ -1,7 +1,10 @@
-export type SuccessResponse<T> = { success: true; data: T };
+import type { ResponseMeta } from "../models/schemas.js";
+
+export type SuccessResponse<T> = { success: true; data: T; meta?: ResponseMeta };
 export type ErrorResponse = { success: false; error: { code: string; message: string } };
 
-export const ok = <T>(data: T): SuccessResponse<T> => ({ success: true, data });
+export const ok = <T>(data: T, meta?: ResponseMeta): SuccessResponse<T> =>
+  meta ? { success: true, data, meta } : { success: true, data };
 
 export const fail = (code: string, message: string): ErrorResponse => ({
   success: false,
