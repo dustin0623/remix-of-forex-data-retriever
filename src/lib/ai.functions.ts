@@ -114,7 +114,7 @@ async function callModel(p: z.infer<typeof Base>, system: string, user: string):
   if (res.status === 401 || res.status === 403) aiError("The AI provider rejected the API key. Check it in Settings.");
   if (res.status === 429) aiError("The AI provider rate-limited this key. Try again in a minute.");
   if (res.status === 503)
-    aiError(`"${p.model}" is overloaded at Google/the provider right now. Try again in a minute or pick another model in Settings.`);
+    aiError(`"${p.model}" is overloaded at the provider right now. Try again in a minute or pick another model in Settings.`);
   if (!res.ok) {
     let detail = "";
     try {
