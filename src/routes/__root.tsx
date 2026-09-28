@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { AppShell } from "@/layouts/AppShell";
 import { Toaster } from "@/components/ui/sonner";
+import { SettingsHydrator } from "@/components/SettingsHydrator";
 
 function NotFoundComponent() {
   return (
@@ -123,6 +124,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <SettingsHydrator />
       <AppShell>
         {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
         <Outlet />
