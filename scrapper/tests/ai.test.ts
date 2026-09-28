@@ -38,7 +38,7 @@ describe("validateAnalysis", () => {
     "BUY gold above 2400", "Place a stop loss at 2380", "take profit near highs",
     "Use 10x leverage", "Entry price 2395", "Reduce position size",
   ])("rejects trading-call language: %s", (text) => {
-    expect(() => validateAnalysis({ ...good, masterPost: text })).toThrowError(/trading-call/);
+    expect(() => validateAnalysis({ ...good, summary: text })).toThrowError(/trading-call/);
   });
   it("allows descriptive words like selling pressure", () => {
     expect(validateAnalysis({ ...good, summary: "Selling pressure faded as buyers returned today." })).toBeTruthy();
@@ -109,7 +109,7 @@ describe("analyze endpoints", () => {
     const get = await boot({ name: "anthropic", model: "claude-haiku-4-5", analyze });
     const r = await get("/api/analyze/gold/today");
     expect(r.statusCode).toBe(200);
-    expect(r.json()).toEqual({ success: true, data: good, meta: { aiProvider: "anthropic", model: "claude-haiku-4-5", generatedAt: FIXED_NOW.toISOString() } });
+    expect(r.json()).toEqual({ success: true, data: { ...good, eventAnalysis: null }, meta: { aiProvider: "anthropic", model: "claude-haiku-4-5", generatedAt: FIXED_NOW.toISOString() } });
     const sent = (analyze.mock.calls[0] as unknown as [AnalysisInput])[0];
     expect(sent.events.length).toBeGreaterThan(0);
     expect(sent.marketSnapshot).toBeNull();
