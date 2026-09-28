@@ -1,3 +1,6 @@
+import { Link } from "@tanstack/react-router";
+import { KeyRound } from "lucide-react";
+
 import { BiasBadge, SimulatedTag } from "@/components/market/badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MarketAnalysis, Scenario } from "@/types/market";
