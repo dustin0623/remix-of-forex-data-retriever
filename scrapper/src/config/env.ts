@@ -24,7 +24,8 @@ const EnvSchema = z.object({
   AI_ENABLED: bool.default("false"),
   AI_PROVIDER: z.string().default("anthropic"),
   ANTHROPIC_API_KEY: z.string().optional().default(""),
-  ANTHROPIC_MODEL: z.string().default("claude-haiku-4-5"),
+  ANTHROPIC_MODEL: z.string().min(1).default("claude-haiku-4-5"),
+  AI_TIMEOUT_MS: z.coerce.number().int().positive().default(30_000),
 });
 
 export type AppConfig = {
@@ -45,6 +46,7 @@ export type AppConfig = {
   aiEnabled: boolean;
   aiProvider: string;
   aiModel: string;
+  aiTimeoutMs: number;
   /** Never serialise this into responses or logs. */
   anthropicApiKey: string;
 };
@@ -69,6 +71,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     aiEnabled: e.AI_ENABLED,
     aiProvider: e.AI_PROVIDER,
     aiModel: e.ANTHROPIC_MODEL,
+    aiTimeoutMs: e.AI_TIMEOUT_MS,
     anthropicApiKey: e.ANTHROPIC_API_KEY,
   };
 }
