@@ -22,3 +22,4 @@
   session-persisted event state + change log, so Phase 3 swaps in the real API by adding one implementation.
 
 - `/scrapper` is a standalone Fastify API (own package.json, node:sqlite, Vitest) outside the frontend build; routes -> CalendarService -> CalendarProvider/EventRepository selected by CALENDAR_PROVIDER; Forex Factory uses the JSON export as primary source and HTML only to enrich actuals, with relevance in GoldRelevanceService (never the parser).
+- `/scrapper` AI is optional: `src/ai` AIProvider (Anthropic via fetch, forced tool call) behind AIService; missing key => 503 AI_NOT_CONFIGURED, output Zod-validated and trading-call language rejected — server must never depend on AI.
