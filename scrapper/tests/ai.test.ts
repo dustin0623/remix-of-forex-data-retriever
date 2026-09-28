@@ -14,7 +14,7 @@ const good: MarketAnalysis = {
   keyEvents: [{ eventId: null, title: "Core PCE", currency: "USD", impact: "high", whyItMatters: "Fed inflation gauge." }],
   bullishScenario: "A soft print supports gold.", bearishScenario: "A hot print lifts yields.",
   neutralScenario: "In-line data keeps gold ranging.", warnings: ["No XAUUSD price feed available."],
-  masterPost: "Gold watches US inflation today.",
+  masterPost: "🟡 GOLD DAILY OUTLOOK\nXAUUSD Macro Bias: Bullish\nGold may react to US inflation data today.",
 };
 
 const input: AnalysisInput = {
@@ -41,7 +41,7 @@ describe("validateAnalysis", () => {
     expect(() => validateAnalysis({ ...good, masterPost: text })).toThrowError(/trading-call/);
   });
   it("allows descriptive words like selling pressure", () => {
-    expect(validateAnalysis({ ...good, summary: "Selling pressure faded as buyers returned." })).toBeTruthy();
+    expect(validateAnalysis({ ...good, summary: "Selling pressure faded as buyers returned today." })).toBeTruthy();
   });
 });
 
