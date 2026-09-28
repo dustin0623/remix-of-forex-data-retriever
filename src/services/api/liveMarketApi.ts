@@ -11,6 +11,8 @@ export const toEvent = (e: LiveEvent): EconomicEvent => ({
   currency: e.currency as Currency,
   goldRelevance: rel(e.goldRelevance),
   usdRelevance: rel(e.usdRelevance),
+  feed: (e.source === "metalsmine" || e.source === "both" ? e.source : "forexfactory") as EventSource,
+  metalsImpact: e.metalsImpact ?? null,
 });
 
 const FIELD: Record<LiveChange["changeType"], EventChange["field"]> = {
