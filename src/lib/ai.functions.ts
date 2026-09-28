@@ -105,11 +105,20 @@ async function sendOnce(p: z.infer<typeof Base>, system: string, user: string): 
 }
 
 async function callModel(p: z.infer<typeof Base>, system: string, user: string): Promise<string> {
-  let res = await sendOnce(p, system, user);
+  const send = async () => {
+    try {
+      return await sendOnce(p, system, user);
+    } catch (e) {
+      if (e instanceof Error && (e.name === "TimeoutError" || e.name === "AbortError"))
+        aiError(`"${p.model}" took too long to answer. Try again, or pick a faster model (e.g. a "lite" one) in Settings.`);
+      aiError("Could not reach the AI provider. Check your connection and try again.");
+    }
+  };
+  let res = await send();
   // One bounded retry for transient provider overload (5xx).
   if (res.status >= 500) {
     await new Promise((r) => setTimeout(r, 2000 + Math.random() * 1000));
-    res = await sendOnce(p, system, user);
+    res = await send();
   }
   if (res.status === 401 || res.status === 403) aiError("The AI provider rejected the API key. Check it in Settings.");
   if (res.status === 429) aiError("The AI provider rate-limited this key. Try again in a minute.");
