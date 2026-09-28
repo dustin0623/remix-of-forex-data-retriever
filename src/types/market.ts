@@ -30,7 +30,9 @@ export interface EconomicEvent {
   previous: string | null;
   goldRelevance: Relevance;
   usdRelevance: Relevance;
-  source: string;
+  source: EventSource | string;
+  /** MetalsMine's own impact rating, when the event exists in that feed. */
+  metalsImpact?: Impact | null;
   description: string;
   history: { period: string; actual: string; forecast: string | null }[];
 }
