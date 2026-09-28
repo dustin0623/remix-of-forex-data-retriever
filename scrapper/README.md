@@ -27,6 +27,7 @@ cp .env.example .env
 | `ANTHROPIC_API_KEY` | _(empty)_ | Optional; never returned or logged |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5` | Model used for analysis |
 | `AI_TIMEOUT_MS` | `30000` | AI request timeout |
+| `POST_STYLE` | `professional` | `professional` \| `concise` \| `educational` — tone of `masterPost` |
 | `ANTHROPIC_API_KEY` | _(empty)_ | Never returned or logged |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5` | |
 
@@ -88,6 +89,52 @@ forced tool call. Output is validated with Zod and **rejected if it contains tra
 (BUY/SELL, entry, stop loss, take profit, position size, leverage). Errors: `AI_INVALID_API_KEY` (502),
 `AI_RATE_LIMITED` (429 + Retry-After), `AI_TIMEOUT` (504), `AI_MALFORMED_RESPONSE` (502), `AI_PROVIDER_ERROR` (502).
 Code lives in `src/ai/` (`AIProvider`, `AnthropicProvider`, `AIService`, `prompts/`, `schemas/`).
+
+## Master Post (Phase 7)
+
+Every analysis returns exactly **one** `masterPost` string, meant to be posted unchanged to
+Telegram, Discord, X and the website (max 1500 chars, no platform variants). It separates observed
+data, interpretation and scenarios. Posts with trading calls (BUY/SELL, entry, SL/TP, leverage,
+position size) or hype ("gold will rise/crash", "guaranteed", "easy profit") are rejected
+(`AI_MALFORMED_RESPONSE`).
+
+Event analysis adds `eventAnalysis`: `actual`, `forecast`, `previous` (always copied from stored data),
+`surpriseDirection` (`above_forecast` | `below_forecast` | `in_line` | `not_released` | `unknown`,
+computed server-side — direction only, never a magnitude), plus model-written `macroImplication` and `goldContext`.
+
+`AI_ENABLED=true AI_PROVIDER=mock` uses a deterministic offline provider (used by tests; no Claude credits).
+
+Example — `GET /api/analyze/gold/today`:
+
+```json
+{
+  "success": true,
+  "data": {
+    "market": "XAUUSD", "bias": "neutral", "confidence": "low", "riskLevel": "medium",
+    "summary": "Gold may react to US data and yield moves; no live price feed is available.",
+    "keyDrivers": ["US dollar direction", "Real yields"],
+    "keyEvents": [{ "eventId": "usd-core-pce-price-index-m-m-2026-09-30", "title": "Core PCE Price Index m/m", "currency": "USD", "impact": "high", "whyItMatters": "high gold relevance." }],
+    "bullishScenario": "Softer US data could potentially support gold.",
+    "bearishScenario": "Stronger US data may lift yields and pressure gold.",
+    "neutralScenario": "In-line data may keep gold range-bound.",
+    "warnings": ["No XAUUSD price snapshot available."],
+    "masterPost": "🟡 GOLD DAILY OUTLOOK\nXAUUSD Macro Bias: Neutral\n\n📊 Key Events (observed):\n🇺🇸 Core PCE Price Index m/m — 12:30 UTC\nActual: 0.3% | Forecast: 0.2% | Previous: 0.3%\n\n🧭 Market Context (interpretation):\n...\n📈 Bullish Scenario: ...\n📉 Bearish Scenario: ...\n⚠️ Risk: medium — ...\nNot financial advice. Context only, no trade signals.",
+    "eventAnalysis": null
+  },
+  "meta": { "aiProvider": "anthropic", "model": "claude-haiku-4-5", "generatedAt": "2026-09-30T12:00:00.000Z" }
+}
+```
+
+Example — `GET /api/analyze/event/usd-core-pce-price-index-m-m-2026-09-30` adds:
+
+```json
+"eventAnalysis": {
+  "actual": "0.3%", "forecast": "0.2%", "previous": "0.3%",
+  "surpriseDirection": "above_forecast",
+  "macroImplication": "A firmer core inflation print could reduce near-term rate-cut expectations.",
+  "goldContext": "Gold may face pressure if the dollar and yields firm on the release."
+}
+```
 
 ## Architecture
 
