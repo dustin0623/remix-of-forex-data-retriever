@@ -335,12 +335,52 @@ const seeds: Seed[] = [
     description: "Weekly change in the number of barrels of commercial crude oil held by US firms.",
     history: [{ period: "Last week", actual: "0.8M", forecast: "-0.4M" }],
   },
+  {
+    dayOffset: 0,
+    time: "11:00",
+    currency: "GBP",
+    title: "LME Copper Inventories",
+    impact: "medium",
+    actual: null,
+    forecast: null,
+    previous: "325K t",
+    goldRelevance: "medium",
+    usdRelevance: "low",
+    source: "London Metal Exchange",
+    feed: "metalsmine",
+    metalsImpact: "medium",
+    description: "Warehouse stocks of industrial metals; a barometer of physical metals demand.",
+    history: [{ period: "Last week", actual: "325K t", forecast: null }],
+  },
+  {
+    dayOffset: 1,
+    time: "16:00",
+    currency: "USD",
+    title: "Gold ETF Holdings w/w",
+    impact: "medium",
+    actual: null,
+    forecast: "+12.4t",
+    previous: "+8.1t",
+    goldRelevance: "high",
+    usdRelevance: "low",
+    source: "World Gold Council",
+    feed: "metalsmine",
+    metalsImpact: "high",
+    description: "Weekly change in bullion held by gold-backed exchange traded funds.",
+    history: [{ period: "Last week", actual: "+8.1t", forecast: "+5.0t" }],
+  },
 ];
+
+/** Feed attribution mirrors the live API: macro movers appear in both calendars. */
+const feedFor = (seed: Seed): EventSource =>
+  seed.feed ?? (seed.goldRelevance === "high" ? "both" : "forexfactory");
 
 export const mockEvents: EconomicEvent[] = seeds.map((seed, index) => {
   const { dayOffset, ...rest } = seed;
   return {
     ...rest,
+    feed: feedFor(seed),
+    metalsImpact: seed.metalsImpact ?? (feedFor(seed) === "both" ? seed.impact : null),
     status: rest.actual ? "RELEASED" : "UPCOMING",
     id: `evt-${String(index + 1).padStart(3, "0")}`,
     datetime: rest.time === "All Day" ? atOffset(dayOffset, "00:00") : atOffset(dayOffset, rest.time),
