@@ -2,7 +2,9 @@ import { createHash } from "node:crypto";
 import * as cheerio from "cheerio";
 import { z } from "zod";
 import { FF_SELECTORS } from "./selectors.js";
-import type { FFExportRow, FFHtmlRow, FFImpact, ParsedForexFactoryEvent } from "./types.js";
+import type {
+  FeedSource, FFExportRow, FFHtmlRow, FFImpact, ParsedForexFactoryEvent,
+} from "./types.js";
 
 export const normalizeWhitespace = (s: string | null | undefined): string =>
   (s ?? "").replace(/\s+/g, " ").trim();
