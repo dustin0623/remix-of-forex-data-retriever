@@ -5,10 +5,12 @@ import { CalendarClock, Coins, DollarSign, Flame } from "lucide-react";
 import { AnalysisCard } from "@/components/market/AnalysisCard";
 import { EventsTable } from "@/components/market/EventsTable";
 import { ErrorState, PageHeader } from "@/components/market/PageHeader";
+import { MarketTimeline } from "@/components/market/MarketTimeline";
+import { RecentChanges } from "@/components/market/RecentChanges";
 import { StatCard } from "@/components/market/StatCard";
 import { SimulatedTag } from "@/components/market/badges";
 import { Skeleton } from "@/components/ui/skeleton";
-import { dashboardAnalysisQuery, snapshotQuery, todayEventsQuery } from "@/services/marketService";
+import { changesQuery, dashboardAnalysisQuery, snapshotQuery, timelineQuery, todayEventsQuery } from "@/services/marketService";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -33,6 +35,8 @@ function Dashboard() {
   const events = useQuery(todayEventsQuery());
   const snapshot = useQuery(snapshotQuery());
   const analysis = useQuery(dashboardAnalysisQuery());
+  const changes = useQuery(changesQuery());
+  const timeline = useQuery(timelineQuery());
 
   const list = events.data ?? [];
   const highImpact = list.filter((e) => e.impact === "high");
@@ -54,6 +58,7 @@ function Dashboard() {
         <StatCard
           label="Events today"
           value={list.length}
+          hint={`${list.filter((e) => e.actual !== null).length} released · ${list.filter((e) => e.actual === null).length} upcoming`}
           icon={<CalendarClock className="size-4" />}
           loading={events.isLoading}
         />
@@ -87,7 +92,7 @@ function Dashboard() {
         {snapshot.isLoading || !snap ? (
           <Skeleton className="mt-4 h-20 w-full" />
         ) : (
-          <dl className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
+          <dl className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-6">
             <div>
               <dt className="text-xs uppercase tracking-wider text-muted-foreground">{snap.symbol}</dt>
               <dd className="num mt-1 text-2xl font-semibold text-gold">{snap.price.toFixed(2)}</dd>
@@ -104,6 +109,11 @@ function Dashboard() {
                   {snap.changeAbsolute.toFixed(2)})
                 </span>
               </dd>
+            </div>
+            <div>
+              <dt className="text-xs uppercase tracking-wider text-muted-foreground">Previous close</dt>
+              <dd className="num mt-1 text-lg font-medium">{snap.previousPrice.toFixed(2)}</dd>
+              <dd className="mt-0.5 text-xs capitalize text-muted-foreground">Trend: {snap.trend}</dd>
             </div>
             <div>
               <dt className="text-xs uppercase tracking-wider text-muted-foreground">Macro bias</dt>
@@ -140,6 +150,23 @@ function Dashboard() {
           />
         )}
       </section>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <section className="panel">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+            <h2 className="text-sm font-semibold">Recent changes</h2>
+            <SimulatedTag />
+          </div>
+          <RecentChanges changes={changes.data} loading={changes.isLoading} />
+        </section>
+        <section className="panel">
+          <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
+            <h2 className="text-sm font-semibold">XAUUSD market timeline</h2>
+            <SimulatedTag />
+          </div>
+          <MarketTimeline points={timeline.data} loading={timeline.isLoading} />
+        </section>
+      </div>
 
       <AnalysisCard analysis={analysis.data} loading={analysis.isLoading} />
     </>

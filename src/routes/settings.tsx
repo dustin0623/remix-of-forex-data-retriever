@@ -57,6 +57,7 @@ function SettingsPage() {
   const {
     simulationMode,
     setSimulationMode,
+    dataSource,
     theme,
     setTheme,
     apiEndpoint,
@@ -94,6 +95,28 @@ function SettingsPage() {
             <Label htmlFor="sim-mode" className="text-sm">
               {simulationMode ? "On" : "Off"}
             </Label>
+          </div>
+        </Row>
+
+        <Row
+          title="Data source"
+          description="Where calendar, change and market data come from."
+        >
+          <div className="space-y-1.5">
+            <Select value={dataSource}>
+              <SelectTrigger aria-label="Data source">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="simulation">Simulation</SelectItem>
+                <SelectItem value="external" disabled>
+                  External API
+                </SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              Real API integration will be enabled in a later phase.
+            </p>
           </div>
         </Row>
 
