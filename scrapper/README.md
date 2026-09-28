@@ -46,14 +46,27 @@ which returns its object directly.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/status` | Service/AI/scraper flags |
+| GET | `/api/status` | Flags plus `provider`, `lastScrapeAt`, `nextAllowedScrapeAt`, `cachedEvents`, `recentChanges` (24h) |
 | GET | `/api/calendar/today` | Today's events (UTC) |
 | GET | `/api/calendar/tomorrow` | Tomorrow's events |
 | GET | `/api/calendar/week` | Current week (Mon–Sun, UTC) |
 | GET | `/api/calendar/high-impact` | High-impact events this week |
 | GET | `/api/calendar/gold-relevant` | Medium/high gold relevance this week |
 | GET | `/api/events/:id` | One event. `400 INVALID_EVENT_ID`, `404 EVENT_NOT_FOUND` |
-| GET | `/api/changes?limit=50` | Detected actual/forecast/previous changes |
+| GET | `/api/changes` | Change log; filters `since`, `until`, `impact`, `currency`, `goldRelevant`, `limit` (1-500) |
+| GET | `/api/events/:id/history` | `{ event, snapshots, changes }` for one event |
+
+## Caching & change detection (Phase 5)
+
+- `CalendarService` fetches the provider's week at most once per `SCRAPER_MIN_INTERVAL_MS`
+  (default 900000); failed attempts also start the interval. Calendar responses carry
+  `meta: { source: "live" | "cache", stale, fetchedAt }`.
+- If the source fails, cached (or, after a restart, persisted) events are returned with
+  `source: "cache", stale: true`; 503 only when nothing is stored.
+- `ChangeDetectionService` hashes id, actual, forecast, previous, impact, datetime. Same hash:
+  only `last_seen_at` is touched. New hash: snapshot + change records (`actual_released`,
+  `actual_revised`, `forecast_changed`, `previous_changed`, `impact_changed`, `event_updated`)
+  + event update. Unique indexes prevent duplicate snapshots/changes.
 
 ## Architecture
 
