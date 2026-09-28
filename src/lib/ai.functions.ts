@@ -107,7 +107,7 @@ async function callModel(p: z.infer<typeof Base>, system: string, user: string):
     console.error(`[ai] ${p.provider} HTTP ${res.status}`);
     aiError(`The AI provider returned an error (HTTP ${res.status}). Check the model name in Settings.`);
   }
-  const body = (await res.json()) as Record<string, any>;
+  const body = (await res.json()) as any;
   const text: string | undefined =
     p.provider === "gemini"
       ? body.candidates?.[0]?.content?.parts?.[0]?.text
