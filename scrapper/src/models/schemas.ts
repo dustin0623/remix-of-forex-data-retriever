@@ -27,6 +27,8 @@ export const EconomicEventSchema = z.object({
   goldRelevance: RelevanceSchema,
   usdRelevance: RelevanceSchema,
   source: z.string(),
+  /** MetalsMine's own impact rating, when the event exists in that feed. */
+  metalsImpact: ImpactSchema.nullable().default(null),
   description: z.string(),
   history: z.array(
     z.object({ period: z.string(), actual: z.string(), forecast: z.string().nullable() }),
