@@ -16,7 +16,7 @@ describe("schemas", () => {
   });
 
   it("validates status", () => {
-    expect(StatusSchema.safeParse({ status: "ok", scraper: true, ai: false, aiProvider: "a", aiModel: "m" }).success).toBe(true);
+    expect(StatusSchema.safeParse({ status: "ok", scraper: true, ai: false, aiProvider: "a", aiModel: "m", provider: "mock", lastScrapeAt: null, nextAllowedScrapeAt: null, cachedEvents: 0, recentChanges: 0 }).success).toBe(true);
     expect(StatusSchema.safeParse({ status: "down" }).success).toBe(false);
   });
 
