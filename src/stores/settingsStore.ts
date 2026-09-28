@@ -4,7 +4,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 export type DataSource = "simulation" | "live";
 
 export const DEFAULT_API_BASE_URL =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined)?.replace(/\/+$/, "") || "http://localhost:5000";
+  (import.meta.env["VITE_API_BASE_URL"] as string | undefined)?.replace(/\/+$/, "") || "http://localhost:5000";
 
 export interface SettingsState {
   /** SIMULATION (default) uses the local mock layer; LIVE calls the /scrapper API. */
