@@ -8,6 +8,7 @@ import { ImpactBadge, RelevanceMeter, SimulatedTag } from "@/components/market/b
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { eventQuery, useSimulationActions } from "@/services/marketService";
+import type { EconomicEvent } from "@/types/market";
 
 export const Route = createFileRoute("/events/$id")({
   head: () => ({
