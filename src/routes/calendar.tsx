@@ -88,13 +88,28 @@ function CalendarPage() {
       />
 
       <section className="panel p-4">
-        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-6">
           <div className="space-y-1.5">
             <Label htmlFor="cal-date" className="text-xs uppercase tracking-wider text-muted-foreground">
               Date
             </Label>
             <Input id="cal-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
           </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Calendar</Label>
+            <Select value={feed} onValueChange={(v) => setFeed(v as SourceFilter)}>
+              <SelectTrigger aria-label="Calendar source">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All calendars</SelectItem>
+                <SelectItem value="forexfactory">Forex Factory</SelectItem>
+                <SelectItem value="metalsmine">MetalsMine</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
 
           <div className="space-y-1.5">
             <Label className="text-xs uppercase tracking-wider text-muted-foreground">Currency</Label>
