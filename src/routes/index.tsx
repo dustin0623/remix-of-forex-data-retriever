@@ -87,7 +87,7 @@ function Dashboard() {
       <section className="panel p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Today's market overview</h2>
-          <SimulatedTag />
+          <span className="text-xs text-muted-foreground">Live price · Binance PAXG/USDT</span>
         </div>
         {snapshot.isLoading || !snap ? (
           <Skeleton className="mt-4 h-20 w-full" />
@@ -111,7 +111,7 @@ function Dashboard() {
               </dd>
             </div>
             <div>
-              <dt className="text-xs uppercase tracking-wider text-muted-foreground">Previous close</dt>
+              <dt className="text-xs uppercase tracking-wider text-muted-foreground">24h open</dt>
               <dd className="num mt-1 text-lg font-medium">{snap.previousPrice.toFixed(2)}</dd>
               <dd className="mt-0.5 text-xs capitalize text-muted-foreground">Trend: {snap.trend}</dd>
             </div>
@@ -161,8 +161,8 @@ function Dashboard() {
         </section>
         <section className="panel">
           <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
-            <h2 className="text-sm font-semibold">XAUUSD market timeline</h2>
-            <SimulatedTag />
+            <h2 className="text-sm font-semibold">XAUUSD market timeline (24h)</h2>
+            <span className="text-xs text-muted-foreground">Binance PAXG/USDT</span>
           </div>
           <MarketTimeline points={timeline.data} loading={timeline.isLoading} />
         </section>

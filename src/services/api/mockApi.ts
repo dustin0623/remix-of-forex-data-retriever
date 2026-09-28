@@ -5,6 +5,7 @@ import * as sim from "@/services/mock/simulationService";
 import { AI_PROVIDERS, currentAiConfig, useSettingsStore } from "@/stores/settingsStore";
 import type { EconomicEvent, MarketAnalysis } from "@/types/market";
 
+import { realSnapshot, realTimeline } from "./goldPrice";
 import type { MarketApi } from "./types";
 
 /**
@@ -103,8 +104,10 @@ export const mockApi: MarketApi = {
   getEvent: (id) => wrap(() => sim.getEvent(id)),
   getChanges: () => wrap(() => sim.getChanges()),
   getMarketAnalysis: (subject) => ensureBaseline().then(() => aiGoldAnalysis(subject)),
-  getMarketSnapshot: () => wrap(() => sim.getMarketSnapshot()),
-  getMarketTimeline: () => wrap(() => sim.getMarketTimeline()),
+  getMarketSnapshot: () =>
+    ensureBaseline().then(() => realSnapshot(sim.getTodayEvents()).catch(() => sim.getMarketSnapshot())),
+  getMarketTimeline: () =>
+    ensureBaseline().then(() => realTimeline(sim.getChanges()).catch(() => sim.getMarketTimeline())),
   getStatus: () =>
     ensureBaseline().then(() => {
       const cfg = currentAiConfig();

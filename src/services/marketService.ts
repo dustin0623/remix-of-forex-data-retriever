@@ -28,10 +28,10 @@ export const eventQuery = (id: string) =>
   queryOptions({ queryKey: ["events", "detail", id], queryFn: () => apiClient.getEvent(id) });
 
 export const snapshotQuery = () =>
-  queryOptions({ queryKey: ["market", "snapshot"], queryFn: () => apiClient.getMarketSnapshot() });
+  queryOptions({ queryKey: ["market", "snapshot"], queryFn: () => apiClient.getMarketSnapshot(), refetchInterval: 30_000 });
 
 export const timelineQuery = () =>
-  queryOptions({ queryKey: ["market", "timeline"], queryFn: () => apiClient.getMarketTimeline() });
+  queryOptions({ queryKey: ["market", "timeline"], queryFn: () => apiClient.getMarketTimeline(), refetchInterval: 30_000 });
 
 export const dashboardAnalysisQuery = () =>
   queryOptions({ queryKey: ["analysis", "dashboard"], queryFn: () => apiClient.getMarketAnalysis("dashboard") });
