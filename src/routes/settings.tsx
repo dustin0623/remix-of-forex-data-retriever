@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { testAiKey } from "@/lib/ai.functions";
+import { testMyfxbookLogin } from "@/lib/sentiment.functions";
 import { getBaselineInfo, syncLiveCalendar } from "@/services/api/mockApi";
 import { AI_PROVIDERS, type AiProvider, type PostStyle } from "@/stores/settingsStore";
 

@@ -76,6 +76,8 @@ function GoldPage() {
         />
       </div>
 
+      <SentimentCard symbol="XAUUSD" />
+
       <MasterPostPanel events={goldEvents} />
 
       <AnalysisCard
