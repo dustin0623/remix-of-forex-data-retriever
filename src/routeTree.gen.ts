@@ -10,7 +10,10 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiExplorerRouteImport } from './routes/api-explorer'
 import { Route as CalendarRouteImport } from './routes/calendar'
+import { Route as GoldRouteImport } from './routes/gold'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as EventsIdRouteImport } from './routes/events.$id'
 
 const IndexRoute = IndexRouteImport.update({
@@ -18,9 +21,24 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiExplorerRoute = ApiExplorerRouteImport.update({
+  id: '/api-explorer',
+  path: '/api-explorer',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CalendarRoute = CalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GoldRoute = GoldRouteImport.update({
+  id: '/gold',
+  path: '/gold',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const EventsIdRoute = EventsIdRouteImport.update({
@@ -31,31 +49,52 @@ const EventsIdRoute = EventsIdRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/api-explorer': typeof ApiExplorerRoute
   '/calendar': typeof CalendarRoute
+  '/gold': typeof GoldRoute
+  '/settings': typeof SettingsRoute
   '/events/$id': typeof EventsIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/api-explorer': typeof ApiExplorerRoute
   '/calendar': typeof CalendarRoute
+  '/gold': typeof GoldRoute
+  '/settings': typeof SettingsRoute
   '/events/$id': typeof EventsIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/api-explorer': typeof ApiExplorerRoute
   '/calendar': typeof CalendarRoute
+  '/gold': typeof GoldRoute
+  '/settings': typeof SettingsRoute
   '/events/$id': typeof EventsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/calendar' | '/events/$id'
+  fullPaths:
+    '/' | '/api-explorer' | '/calendar' | '/gold' | '/settings' | '/events/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/calendar' | '/events/$id'
-  id: '__root__' | '/' | '/calendar' | '/events/$id'
+  to:
+    '/' | '/api-explorer' | '/calendar' | '/gold' | '/settings' | '/events/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/api-explorer'
+    | '/calendar'
+    | '/gold'
+    | '/settings'
+    | '/events/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  ApiExplorerRoute: typeof ApiExplorerRoute
   CalendarRoute: typeof CalendarRoute
+  GoldRoute: typeof GoldRoute
+  SettingsRoute: typeof SettingsRoute
   EventsIdRoute: typeof EventsIdRoute
 }
 
@@ -68,11 +107,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api-explorer': {
+      id: '/api-explorer'
+      path: '/api-explorer'
+      fullPath: '/api-explorer'
+      preLoaderRoute: typeof ApiExplorerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/calendar': {
       id: '/calendar'
       path: '/calendar'
       fullPath: '/calendar'
       preLoaderRoute: typeof CalendarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gold': {
+      id: '/gold'
+      path: '/gold'
+      fullPath: '/gold'
+      preLoaderRoute: typeof GoldRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/events/$id': {
@@ -87,7 +147,10 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  ApiExplorerRoute: ApiExplorerRoute,
   CalendarRoute: CalendarRoute,
+  GoldRoute: GoldRoute,
+  SettingsRoute: SettingsRoute,
   EventsIdRoute: EventsIdRoute,
 }
 export const routeTree = rootRouteImport

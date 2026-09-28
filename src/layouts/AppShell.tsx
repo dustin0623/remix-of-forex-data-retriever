@@ -61,11 +61,11 @@ export function AppShell({ children }: { children: ReactNode }) {
       <div className="flex">
         <aside className="hidden w-56 shrink-0 border-r border-border bg-sidebar lg:block">
           <nav className="sticky top-[53px] flex flex-col gap-0.5 p-3">
-            {nav.map(({ to, label, icon: Icon, ...rest }) => (
+            {nav.map(({ to, label, icon: Icon }) => (
               <Link
                 key={to}
                 to={to}
-                activeOptions={{ exact: "exact" in rest ? rest.exact : false }}
+                activeOptions={{ exact: to === "/" }}
                 activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground" }}
                 inactiveProps={{ className: "text-muted-foreground hover:bg-sidebar-accent/50" }}
                 className="flex items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors"
