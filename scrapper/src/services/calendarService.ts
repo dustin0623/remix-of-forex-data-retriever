@@ -1,73 +1,127 @@
 import type { EventRepository } from "../database/repository.js";
-import type { EconomicEvent, EventChange } from "../models/schemas.js";
+import type { ChangesQuery, EconomicEvent, EventChange, EventSnapshot, ResponseMeta } from "../models/schemas.js";
 import type { CalendarProvider } from "../scraper/CalendarProvider.js";
+import { addDays, isSameUtcDay, startOfUtcDay } from "../utils/dates.js";
+import { ApiError } from "../utils/response.js";
+import { CalendarCache } from "./calendarCache.js";
+import { ChangeDetectionService } from "./changeDetectionService.js";
 
-const FIELDS = ["actual", "forecast", "previous"] as const;
+export interface CalendarResult<T> {
+  data: T;
+  meta: ResponseMeta;
+}
 
+export interface CalendarServiceOptions {
+  minIntervalMs: number;
+  now?: () => Date;
+  onError?: (err: unknown) => void;
+}
+
+const GOLD = ["very_high", "high", "medium"];
+const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Single entry point for calendar data. Fetches the provider's week at most once per
+ * minIntervalMs, runs change detection on each successful fetch, and falls back to
+ * cached/persisted data (meta.stale=true) when the provider fails.
+ */
 export class CalendarService {
+  private readonly cache: CalendarCache;
+  private readonly detector: ChangeDetectionService;
+  private readonly now: () => Date;
+  private inflight: Promise<CalendarResult<EconomicEvent[]>> | null = null;
+
   constructor(
     private readonly provider: CalendarProvider,
     private readonly repo: EventRepository,
-  ) {}
-
-  /** Persists events, snapshotting and logging field-level changes. */
-  private sync(events: EconomicEvent[]): EconomicEvent[] {
-    const now = new Date().toISOString();
-    return this.repo.transaction(() =>
-      events.map((incoming) => {
-        const existing = this.repo.findById(incoming.id);
-        let event = incoming;
-        if (!existing) {
-          this.repo.upsert(event);
-          this.repo.addSnapshot(event);
-          return event;
-        }
-        const diffs = FIELDS.filter((f) => existing[f] !== incoming[f]);
-        if (diffs.length === 0) return existing;
-        for (const field of diffs) {
-          const changeType: EventChange["changeType"] =
-            field === "actual"
-              ? existing.actual === null ? "actual_released" : "actual_revised"
-              : field === "forecast" ? "forecast_revised" : "previous_revised";
-          this.repo.addChange({
-            eventId: incoming.id,
-            eventTitle: incoming.title,
-            changeType,
-            field,
-            previousValue: existing[field],
-            newValue: incoming[field],
-            detectedAt: now,
-          });
-        }
-        if (existing.actual !== null && diffs.includes("actual")) {
-          event = { ...incoming, status: "UPDATED" };
-        }
-        this.repo.upsert(event);
-        this.repo.addSnapshot(event);
-        return event;
-      }),
-    );
+    private readonly opts: CalendarServiceOptions,
+  ) {
+    this.now = opts.now ?? (() => new Date());
+    this.cache = new CalendarCache(opts.minIntervalMs, this.now);
+    this.detector = new ChangeDetectionService(repo, this.now);
   }
 
-  async today() { return this.sync(await this.provider.getToday()); }
-  async tomorrow() { return this.sync(await this.provider.getTomorrow()); }
-  async week() { return this.sync(await this.provider.getWeek()); }
-
-  async highImpact() {
-    return (await this.week()).filter((e) => e.impact === "high");
+  private meta(source: "live" | "cache", stale: boolean): ResponseMeta {
+    return { source, stale, fetchedAt: this.cache.lastScrapeAt?.toISOString() ?? null };
   }
 
-  async goldRelevant() {
-    return (await this.week()).filter((e) => ["very_high", "high", "medium"].includes(e.goldRelevance));
+  private persisted(): EconomicEvent[] {
+    const start = addDays(startOfUtcDay(this.now()), -7).toISOString();
+    const end = addDays(startOfUtcDay(this.now()), 14).toISOString();
+    return this.repo.listEvents(start, end);
   }
+
+  async week(): Promise<CalendarResult<EconomicEvent[]>> {
+    if (this.cache.data === null) this.cache.seed(this.persisted());
+    if (this.cache.isFresh()) return { data: this.cache.data!, meta: this.meta("cache", false) };
+    if (!this.cache.canFetch()) {
+      if (this.cache.data) return { data: this.cache.data, meta: this.meta("cache", !this.cache.isFresh()) };
+      throw new ApiError(503, "UPSTREAM_UNAVAILABLE", "Calendar source unavailable; retry later");
+    }
+    this.inflight ??= this.refresh().finally(() => (this.inflight = null));
+    return this.inflight;
+  }
+
+  private async refresh(): Promise<CalendarResult<EconomicEvent[]>> {
+    this.cache.markAttempt();
+    try {
+      const fetched = await this.provider.getWeek();
+      const { events } = this.detector.sync(fetched);
+      this.cache.store(events);
+      return { data: events, meta: this.meta("live", false) };
+    } catch (err) {
+      this.opts.onError?.(err);
+      if (this.cache.data) return { data: this.cache.data, meta: this.meta("cache", true) };
+      throw err instanceof ApiError ? err : new ApiError(503, "UPSTREAM_UNAVAILABLE", "Calendar source unavailable; retry later");
+    }
+  }
+
+  private async filtered(pred: (e: EconomicEvent) => boolean): Promise<CalendarResult<EconomicEvent[]>> {
+    const r = await this.week();
+    return { data: r.data.filter(pred), meta: r.meta };
+  }
+
+  today() {
+    const d = startOfUtcDay(this.now());
+    return this.filtered((e) => isSameUtcDay(e.datetime, d));
+  }
+  tomorrow() {
+    const d = addDays(startOfUtcDay(this.now()), 1);
+    return this.filtered((e) => isSameUtcDay(e.datetime, d));
+  }
+  highImpact() { return this.filtered((e) => e.impact === "high"); }
+  goldRelevant() { return this.filtered((e) => GOLD.includes(e.goldRelevance)); }
 
   async byId(id: string): Promise<EconomicEvent | null> {
     const stored = this.repo.findById(id);
-    if (stored) return stored;
-    return (await this.week()).find((e) => e.id === id) ?? null;
+    if (stored) return stored.event;
+    try {
+      return (await this.week()).data.find((e) => e.id === id) ?? null;
+    } catch {
+      return null;
+    }
   }
 
-  changes(limit: number) {
-    return this.repo.listChanges(limit);
+  history(id: string): { event: EconomicEvent; snapshots: EventSnapshot[]; changes: EventChange[] } | null {
+    const stored = this.repo.findById(id);
+    if (!stored) return null;
+    return {
+      event: stored.event,
+      snapshots: this.repo.listSnapshots(id),
+      changes: this.repo.queryChanges({ eventId: id, limit: 500 }),
+    };
+  }
+
+  changes(q: Partial<ChangesQuery> & { limit: number }): EventChange[] {
+    return this.repo.queryChanges(q);
+  }
+
+  status() {
+    return {
+      lastScrapeAt: this.cache.lastScrapeAt?.toISOString() ?? null,
+      nextAllowedScrapeAt: this.cache.nextAllowedScrapeAt?.toISOString() ?? null,
+      cachedEvents: this.repo.countEvents(),
+      recentChanges: this.repo.countChangesSince(new Date(this.now().getTime() - RECENT_WINDOW_MS).toISOString()),
+    };
   }
 }

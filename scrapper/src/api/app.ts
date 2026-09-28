@@ -13,16 +13,22 @@ export interface BuildAppOptions {
   config: AppConfig;
   provider?: CalendarProvider;
   logger?: boolean;
+  now?: () => Date;
 }
 
-export async function buildApp({ config, provider, logger = false }: BuildAppOptions): Promise<FastifyInstance> {
+export async function buildApp({ config, provider, logger = false, now }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     logger: logger ? { redact: ["req.headers.authorization", "*.anthropicApiKey"] } : false,
   });
 
   const db = openDatabase(config.databaseUrl);
   app.addHook("onClose", async () => db.close());
-  const service = new CalendarService(provider ?? createProvider(config, app.log), new SqliteEventRepository(db));
+  const source = provider ?? createProvider(config, app.log);
+  const service = new CalendarService(source, new SqliteEventRepository(db), {
+    minIntervalMs: config.scraper.minIntervalMs,
+    onError: (err) => app.log.warn({ err }, "calendar fetch failed; serving cache if available"),
+    ...(now ? { now } : {}),
+  });
 
   app.addHook("onSend", async (_req, reply, payload) => {
     reply.header("Access-Control-Allow-Origin", "*");
@@ -39,7 +45,7 @@ export async function buildApp({ config, provider, logger = false }: BuildAppOpt
     reply.status(404).send(fail("NOT_FOUND", `Route ${req.method} ${req.url} not found`)),
   );
 
-  await app.register(statusRoutes, { config });
+  await app.register(statusRoutes, { config, service, providerName: source.name });
   await app.register(calendarRoutes, { service });
   return app;
 }
