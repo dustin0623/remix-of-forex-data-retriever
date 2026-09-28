@@ -45,14 +45,15 @@ export class MockCalendarProvider implements CalendarProvider {
       const [h, m] = t.time.split(":").map(Number);
       const dt = new Date(day.getTime() + (h! * 60 + m!) * 60_000);
       const released = dt.getTime() <= now.getTime();
-      const { day: _d, actualValue, ...rest } = t;
+      const { day: _d, actualValue, feed, metalsImpact, ...rest } = t;
       return EconomicEventSchema.parse({
         ...rest,
         id: `${slug(t.currency)}-${slug(t.title)}-${isoDate(day)}`,
         datetime: dt.toISOString(),
         status: released ? "RELEASED" : "UPCOMING",
         actual: released ? actualValue : null,
-        source: "mock",
+        source: feed ?? "forexfactory",
+        metalsImpact: metalsImpact ?? null,
       });
     }).sort((a, b) => a.datetime.localeCompare(b.datetime));
   }
