@@ -1,4 +1,4 @@
-import type { Currency, EconomicEvent, EventChange, Relevance } from "@/types/market";
+import type { Currency, EconomicEvent, EventChange, EventSource, Relevance } from "@/types/market";
 
 import type { ScrapperClient } from "./apiClient";
 import type { LiveChange, LiveEvent, LiveRelevance } from "./liveTypes";
