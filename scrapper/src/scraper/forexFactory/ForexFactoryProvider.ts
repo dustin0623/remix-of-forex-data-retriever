@@ -4,8 +4,10 @@ import { ApiError } from "../../utils/response.js";
 import { addDays, isSameUtcDay, startOfUtcDay } from "../../utils/dates.js";
 import type { CalendarProvider } from "../CalendarProvider.js";
 import type { ForexFactoryClient } from "./ForexFactoryClient.js";
-import { mergeActuals, parseCalendarHtml, parseExport } from "./ForexFactoryParser.js";
-import { consoleLogger, type ForexFactoryEvent, type ScraperLogger } from "./types.js";
+import { mergeActuals, mergeFeeds, parseCalendarHtml, parseExport } from "./ForexFactoryParser.js";
+import {
+  consoleLogger, type FeedSource, type ForexFactoryEvent, type ScraperLogger,
+} from "./types.js";
 
 export interface ForexFactoryProviderOptions {
   client: ForexFactoryClient;
@@ -13,26 +15,31 @@ export interface ForexFactoryProviderOptions {
   minIntervalMs?: number;
   /** Also fetch the HTML calendar to fill in actual values (export has none). */
   enrichActuals: boolean;
+  /** Feeds to combine. Defaults to both Fair Economy calendars. */
+  sources?: FeedSource[];
   relevance?: GoldRelevanceService;
   logger?: ScraperLogger;
   now?: () => Date;
 }
 
 /**
+ * Combines the Forex Factory and MetalsMine weekly calendars into one feed.
  * Stateless apart from in-flight de-duplication: every call hits upstream.
  * Caching, throttling and stale fallback live in CalendarService/CalendarCache.
  */
 export class ForexFactoryProvider implements CalendarProvider {
-  readonly name = "forexfactory";
+  readonly name = "faireconomy";
   private inflight: Promise<ForexFactoryEvent[]> | null = null;
   private readonly relevance: GoldRelevanceService;
   private readonly log: ScraperLogger;
   private readonly now: () => Date;
+  private readonly sources: FeedSource[];
 
   constructor(private readonly opts: ForexFactoryProviderOptions) {
     this.relevance = opts.relevance ?? new GoldRelevanceService();
     this.log = opts.logger ?? consoleLogger;
     this.now = opts.now ?? (() => new Date());
+    this.sources = opts.sources?.length ? opts.sources : ["forexfactory", "metalsmine"];
   }
 
   async getNormalizedWeek(): Promise<ForexFactoryEvent[]> {
@@ -40,24 +47,51 @@ export class ForexFactoryProvider implements CalendarProvider {
     return this.inflight;
   }
 
+  private async fetchFeed(source: FeedSource) {
+    const json =
+      source === "metalsmine"
+        ? await this.opts.client.fetchMetalsExport()
+        : await this.opts.client.fetchWeekExport();
+    return parseExport(json, source);
+  }
+
   private async refresh(): Promise<ForexFactoryEvent[]> {
-    try {
-      const { events, skipped } = parseExport(await this.opts.client.fetchWeekExport());
-      let merged = events;
-      if (this.opts.enrichActuals) {
-        try {
-          merged = mergeActuals(events, parseCalendarHtml(await this.opts.client.fetchWeekHtml()));
-        } catch (err) {
-          this.log.warn({ error: (err as Error).message }, "actuals enrichment failed; using export only");
-        }
+    const results = await Promise.allSettled(this.sources.map((s) => this.fetchFeed(s)));
+    const feeds: Record<FeedSource, Awaited<ReturnType<typeof this.fetchFeed>>["events"]> = {
+      forexfactory: [],
+      metalsmine: [],
+    };
+    let skipped = 0;
+    let succeeded = 0;
+
+    results.forEach((r, i) => {
+      const source = this.sources[i]!;
+      if (r.status === "fulfilled") {
+        feeds[source] = r.value.events;
+        skipped += r.value.skipped;
+        succeeded++;
+      } else {
+        this.log.warn({ source, error: (r.reason as Error).message }, "calendar feed failed");
       }
-      const out = merged.map((e) => ({ ...e, goldRelevance: this.relevance.classify(e) }));
-      this.log.info({ events: out.length, skipped }, "calendar fetched");
-      return out;
-    } catch (err) {
-      this.log.error({ error: (err as Error).message }, "calendar fetch failed");
+    });
+
+    if (succeeded === 0) {
+      this.log.error({}, "calendar fetch failed for every source");
       throw new ApiError(503, "UPSTREAM_UNAVAILABLE", "Calendar source unavailable; retry later");
     }
+
+    let merged = mergeFeeds(feeds.forexfactory, feeds.metalsmine);
+    if (this.opts.enrichActuals && this.sources.includes("forexfactory")) {
+      try {
+        merged = mergeActuals(merged, parseCalendarHtml(await this.opts.client.fetchWeekHtml()));
+      } catch (err) {
+        this.log.warn({ error: (err as Error).message }, "actuals enrichment failed; using export only");
+      }
+    }
+
+    const out = merged.map((e) => ({ ...e, goldRelevance: this.relevance.classify(e) }));
+    this.log.info({ events: out.length, skipped, sources: this.sources }, "calendar fetched");
+    return out;
   }
 
   private toApi(e: ForexFactoryEvent): EconomicEvent {
@@ -75,7 +109,8 @@ export class ForexFactoryProvider implements CalendarProvider {
       previous: e.previous,
       goldRelevance: e.goldRelevance,
       usdRelevance: e.currency === "USD" ? (e.impact === "low" ? "medium" : "high") : "none",
-      source: "forexfactory",
+      source: e.source,
+      metalsImpact: e.metalsImpact,
       description: "",
       history: [],
     };
@@ -84,6 +119,7 @@ export class ForexFactoryProvider implements CalendarProvider {
   async getWeek() {
     return (await this.getNormalizedWeek()).map((e) => this.toApi(e));
   }
+
 
   async getToday() {
     const d = startOfUtcDay(this.now());
