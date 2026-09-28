@@ -196,3 +196,40 @@ Return JSON: {"post": string}`;
     if (BANNED.test(post)) aiError("The post contained trading-call language and was rejected. Try again.");
     return { post, generatedAt: new Date().toISOString() };
   });
+
+const NewsOut = z.object({
+  bias: z.enum(["bullish", "bearish", "neutral"]),
+  confidence: z.number().min(0).max(100),
+  summary: z.string().min(10).max(1200),
+  relevant: z
+    .array(
+      z.object({
+        id: z.string().max(300),
+        impact: z.enum(["bullish", "bearish", "neutral"]),
+        reason: z.string().max(300),
+      }),
+    )
+    .max(15),
+});
+
+export const analyzeNews = createServerFn({ method: "POST" })
+  .inputValidator((d: unknown) =>
+    Base.extend({
+      headlines: z
+        .array(z.object({ id: z.string().max(300), source: z.string().max(20), title: z.string().max(400), publishedAt: z.string().max(40) }))
+        .min(1)
+        .max(60),
+    }).parse(d),
+  )
+  .handler(async ({ data }) => {
+    const user = `Recent headlines (UTC, unfiltered):\n${data.headlines
+      .map((h) => `- [${h.id}] ${h.publishedAt} (${h.source}) ${h.title}`)
+      .join("\n")}
+
+Identify only the headlines that plausibly affect gold (safe-haven demand, USD, real yields, oil/geopolitics, central banks). Ignore the rest.
+Return JSON: {"bias":"bullish|bearish|neutral","confidence":0-100,"summary":string,"relevant":[{"id":string (the bracketed id),"impact":"bullish|bearish|neutral","reason":string}]}`;
+    const parsed = NewsOut.safeParse(parseJson(await callModel(data, SYSTEM, user)));
+    if (!parsed.success) aiError("The AI response did not match the expected news format. Try again.");
+    if (BANNED.test(JSON.stringify(parsed.data))) aiError("The AI response contained trading-call language and was rejected. Try again.");
+    return { ...parsed.data, generatedAt: new Date().toISOString() };
+  });
