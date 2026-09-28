@@ -30,7 +30,10 @@ export interface EconomicEvent {
   previous: string | null;
   goldRelevance: Relevance;
   usdRelevance: Relevance;
-  source: EventSource | string;
+  /** Publishing agency (simulation) or the upstream feed name (live API). */
+  source: string;
+  /** Which calendar feed the event came from; "both" when it appears in each. */
+  feed: EventSource;
   /** MetalsMine's own impact rating, when the event exists in that feed. */
   metalsImpact?: Impact | null;
   description: string;
