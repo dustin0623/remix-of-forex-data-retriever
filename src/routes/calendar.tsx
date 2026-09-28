@@ -84,7 +84,7 @@ function CalendarPage() {
       <PageHeader
         title="Economic Calendar"
         description="Real Forex Factory + MetalsMine events for this week. Select any row for full event detail."
-        actions={<SimulatedTag label="Simulated data" />}
+        actions={<SimulatedTag label="Real calendar" />}
       />
 
       <section className="panel p-4">
