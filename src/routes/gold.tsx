@@ -42,8 +42,8 @@ function GoldPage() {
     <>
       <PageHeader
         title="Gold Analysis"
-        description="Real Forex Factory + MetalsMine events. The analysis uses your own AI key (Settings); without one, a sample analysis is shown. Not advice."
-        actions={<SimulatedTag label={analysis.data?.simulated === false ? "AI analysis" : "Sample analysis"} />}
+        description="Real Forex Factory + MetalsMine events and live gold price. The outlook is written by your own AI key (Settings). Not advice."
+        actions={analysis.data?.simulated === false ? <SimulatedTag label="AI analysis" /> : null}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -51,15 +51,15 @@ function GoldPage() {
           label="XAUUSD"
           value={snapshot.data ? snapshot.data.price.toFixed(2) : "—"}
           tone="gold"
-          hint="Simulated price"
+          hint="Live · Binance PAXG/USDT"
           loading={snapshot.isLoading}
         />
         <StatCard
           label="Bias"
           value={<span className="capitalize">{analysis.data?.bias ?? "—"}</span>}
           tone={analysis.data?.bias === "bullish" ? "bull" : analysis.data?.bias === "bearish" ? "bear" : "default"}
-          hint="Simulated directional lean"
-          loading={analysis.isLoading}
+          hint={aiConfigured ? "AI directional lean" : "Add an AI key in Settings"}
+          loading={aiConfigured && analysis.isLoading}
         />
         <StatCard
           label="Risk level"
@@ -80,7 +80,8 @@ function GoldPage() {
 
       <AnalysisCard
         analysis={analysis.data}
-        loading={analysis.isLoading}
+        loading={aiConfigured && analysis.isLoading}
+        needsKey={!aiConfigured}
         title="XAUUSD outlook"
         showUsdContext
       />
