@@ -22,6 +22,10 @@ export interface CalendarServiceOptions {
 const GOLD = ["very_high", "high", "medium"];
 const RECENT_WINDOW_MS = 24 * 60 * 60 * 1000;
 
+/** "both" events belong to each feed, so they survive every source filter. */
+const matchesSource = (e: EconomicEvent, source: SourceFilter): boolean =>
+  source === "all" || e.source === source || e.source === "both";
+
 /**
  * Single entry point for calendar data. Fetches the provider's week at most once per
  * minIntervalMs, runs change detection on each successful fetch, and falls back to
