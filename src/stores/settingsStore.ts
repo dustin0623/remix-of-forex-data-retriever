@@ -110,6 +110,8 @@ export const useSettingsStore = create<SettingsState>()(
         aiKeys: s.aiKeys,
         aiModels: s.aiModels,
         postStyle: s.postStyle,
+        myfxbookEmail: s.myfxbookEmail,
+        myfxbookPassword: s.myfxbookPassword,
       }),
     },
   ),
