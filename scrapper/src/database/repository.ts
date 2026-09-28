@@ -87,22 +87,22 @@ export class SqliteEventRepository implements EventRepository {
   insertEvent(e: EconomicEvent, hash: string, now: string): void {
     this.db
       .prepare(
-        `INSERT INTO events (id, source, event, currency, impact, datetime, actual, forecast, previous,
+        `INSERT INTO events (id, source, event, currency, impact, metals_impact, datetime, actual, forecast, previous,
            gold_relevance, usd_relevance, status, description, content_hash, first_seen_at, last_seen_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .run(e.id, e.source, e.title, e.currency, e.impact, e.datetime, e.actual, e.forecast, e.previous,
+      .run(e.id, e.source, e.title, e.currency, e.impact, e.metalsImpact ?? null, e.datetime, e.actual, e.forecast, e.previous,
         e.goldRelevance, e.usdRelevance, e.status, e.description, hash, now, now, now);
   }
 
   updateEvent(e: EconomicEvent, hash: string, now: string): void {
     this.db
       .prepare(
-        `UPDATE events SET source=?, event=?, currency=?, impact=?, datetime=?, actual=?, forecast=?, previous=?,
+        `UPDATE events SET source=?, event=?, currency=?, impact=?, metals_impact=?, datetime=?, actual=?, forecast=?, previous=?,
            gold_relevance=?, usd_relevance=?, status=?, description=?, content_hash=?, last_seen_at=?, updated_at=?
          WHERE id=?`,
       )
-      .run(e.source, e.title, e.currency, e.impact, e.datetime, e.actual, e.forecast, e.previous,
+      .run(e.source, e.title, e.currency, e.impact, e.metalsImpact ?? null, e.datetime, e.actual, e.forecast, e.previous,
         e.goldRelevance, e.usdRelevance, e.status, e.description, hash, now, now, e.id);
   }
 
