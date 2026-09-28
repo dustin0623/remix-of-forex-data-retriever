@@ -4,6 +4,10 @@ export type Relevance = "none" | "low" | "medium" | "high";
 export type Bias = "bullish" | "bearish" | "neutral";
 export type EventStatus = "UPCOMING" | "RELEASED" | "UPDATED";
 export type Trend = "up" | "down" | "sideways";
+/** Which upstream calendar an event came from ("both" when it appears in each). */
+export type EventSource = "forexfactory" | "metalsmine" | "both";
+/** Source filter accepted by the calendar endpoints. */
+export type SourceFilter = "all" | "forexfactory" | "metalsmine";
 
 /**
  * Field shape intentionally mirrors a Forex Factory calendar row
