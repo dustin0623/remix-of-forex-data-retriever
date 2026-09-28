@@ -156,12 +156,34 @@ describe("ForexFactoryProvider", () => {
   it("falls back to export-only data when HTML is blocked", async () => {
     const p = new ForexFactoryProvider({ client: fakeClient({ htmlFail: true }), minIntervalMs: 900_000, enrichActuals: true, logger: silent });
     const week = await p.getWeek();
-    expect(week).toHaveLength(5);
+    expect(week).toHaveLength(7);
     expect(week.every((e) => e.actual === null)).toBe(true);
   });
 
-  it("throws a clean 503 when upstream fails", async () => {
-    const p = new ForexFactoryProvider({ client: fakeClient({ exportFail: true }), minIntervalMs: 900_000, enrichActuals: false, logger: silent });
+  it("combines both feeds and exposes source attribution", async () => {
+    const p = new ForexFactoryProvider({ client: fakeClient(), enrichActuals: false, logger: silent });
+    const week = await p.getWeek();
+    for (const e of week) expect(EconomicEventSchema.safeParse(e).success).toBe(true);
+    expect(week.find((e) => e.title.startsWith("Core PCE"))).toMatchObject({ source: "both", metalsImpact: "medium" });
+    expect(week.filter((e) => e.source === "metalsmine")).toHaveLength(2);
+  });
+
+  it("keeps serving one feed when the other fails", async () => {
+    const p = new ForexFactoryProvider({ client: fakeClient({ metalsFail: true }), enrichActuals: false, logger: silent });
+    const week = await p.getWeek();
+    expect(week).toHaveLength(5);
+    expect(week.every((e) => e.source === "forexfactory")).toBe(true);
+  });
+
+  it("only fetches the configured sources", async () => {
+    const client = fakeClient();
+    const p = new ForexFactoryProvider({ client, enrichActuals: false, sources: ["metalsmine"], logger: silent });
+    expect(await p.getWeek()).toHaveLength(3);
+    expect(client.fetchWeekExport).not.toHaveBeenCalled();
+  });
+
+  it("throws a clean 503 when every source fails", async () => {
+    const p = new ForexFactoryProvider({ client: fakeClient({ exportFail: true, metalsFail: true }), minIntervalMs: 900_000, enrichActuals: false, logger: silent });
     await expect(p.getWeek()).rejects.toMatchObject({ statusCode: 503, code: "UPSTREAM_UNAVAILABLE" });
   });
 });
