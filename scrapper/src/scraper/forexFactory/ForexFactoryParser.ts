@@ -49,8 +49,11 @@ const ExportRowSchema = z.object({
   actual: z.string().optional(),
 });
 
-/** Parses the weekly JSON export. Invalid rows are skipped, never fatal. */
-export function parseExport(json: unknown): { events: ParsedForexFactoryEvent[]; skipped: number } {
+/** Parses a weekly JSON export (Forex Factory or MetalsMine). Invalid rows are skipped, never fatal. */
+export function parseExport(
+  json: unknown,
+  source: FeedSource = "forexfactory",
+): { events: ParsedForexFactoryEvent[]; skipped: number } {
   const rows = Array.isArray(json) ? json : [];
   const events: ParsedForexFactoryEvent[] = [];
   let skipped = 0;
@@ -65,12 +68,14 @@ export function parseExport(json: unknown): { events: ParsedForexFactoryEvent[];
     const datetime = new Date(ts).toISOString();
     const currency = normalizeWhitespace(row.country).toUpperCase();
     const event = normalizeWhitespace(row.title);
+    const impact = normalizeImpact(row.impact);
     events.push({
       id: buildEventId(currency, event, datetime),
-      source: "forexfactory",
+      source,
       event,
       currency,
-      impact: normalizeImpact(row.impact),
+      impact,
+      metalsImpact: source === "metalsmine" ? impact : null,
       datetime,
       actual: emptyToNull(row.actual),
       forecast: emptyToNull(row.forecast),
@@ -79,6 +84,37 @@ export function parseExport(json: unknown): { events: ParsedForexFactoryEvent[];
   }
   return { events, skipped };
 }
+
+const IMPACT_RANK: Record<FFImpact, number> = { low: 0, medium: 1, high: 2 };
+
+/**
+ * Merges the two feeds into one calendar. Events present in both are combined
+ * once, keeping the strongest impact rating and MetalsMine's own rating.
+ */
+export function mergeFeeds(
+  forexFactory: ParsedForexFactoryEvent[],
+  metalsMine: ParsedForexFactoryEvent[],
+): ParsedForexFactoryEvent[] {
+  const byId = new Map<string, ParsedForexFactoryEvent>();
+  for (const e of [...forexFactory, ...metalsMine]) {
+    const existing = byId.get(e.id);
+    if (!existing) {
+      byId.set(e.id, { ...e });
+      continue;
+    }
+    byId.set(e.id, {
+      ...existing,
+      source: existing.source === e.source ? existing.source : "both",
+      impact: IMPACT_RANK[e.impact] > IMPACT_RANK[existing.impact] ? e.impact : existing.impact,
+      metalsImpact: existing.metalsImpact ?? e.metalsImpact,
+      actual: existing.actual ?? e.actual,
+      forecast: existing.forecast ?? e.forecast,
+      previous: existing.previous ?? e.previous,
+    });
+  }
+  return [...byId.values()].sort((a, b) => a.datetime.localeCompare(b.datetime));
+}
+
 
 /** Parses the HTML calendar table. Missing cells become null. */
 export function parseCalendarHtml(html: string): FFHtmlRow[] {
