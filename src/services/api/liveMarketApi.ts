@@ -39,7 +39,7 @@ export const toChange = (c: LiveChange): EventChange => ({
 /** Thrown for data the /scrapper API does not provide (price feed, sample analysis). */
 export class NotInLiveModeError extends Error {
   constructor(what: string) {
-    super(`${what} is not available from the live API.`);
+    super(`${what} is not available from the Scrapper API.`);
     this.name = "NotInLiveModeError";
   }
 }
