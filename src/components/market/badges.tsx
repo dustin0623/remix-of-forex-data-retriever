@@ -68,7 +68,7 @@ export function BiasBadge({ bias, className }: { bias: Bias; className?: string 
   );
 }
 
-export function SourceTag({ label = "Direct", className }: { label?: string; className?: string }) {
+export function SourceTag({ label = "Real data", className }: { label?: string; className?: string }) {
   return (
     <span
       className={cn(

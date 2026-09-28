@@ -68,16 +68,16 @@ function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Preferences and your own AI keys, stored only in this browser."
-        actions={<SourceTag label={dataSource === "live" ? "Live API" : "Direct feed"} />}
+        actions={<SourceTag label={dataSource === "live" ? "Scrapper API" : "Direct feed"} />}
       />
 
       <section className="panel px-5 py-1">
         <Row title="Data source" description="Direct feed pulls Forex Factory + MetalsMine, Binance and news straight from this app. Scrapper API reads the same data from your server.">
-          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "direct" | "live"); toast.success(v === "live" ? "Switched to Live API" : "Switched to Direct feed"); }}>
+          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "direct" | "live"); toast.success(v === "live" ? "Switched to Scrapper API" : "Switched to Direct feed"); }}>
             <SelectTrigger aria-label="Data source"><SelectValue /></SelectTrigger>
             <SelectContent>
               <SelectItem value="direct">Direct feed</SelectItem>
-              <SelectItem value="live">Live API</SelectItem>
+              <SelectItem value="live">Scrapper API</SelectItem>
             </SelectContent>
           </Select>
         </Row>

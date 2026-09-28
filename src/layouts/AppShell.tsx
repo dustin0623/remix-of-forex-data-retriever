@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </div>
           <span className="rounded border border-sim-foreground/40 bg-sim/50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-sim-foreground">
-            {directMode ? "Direct feed · real data" : "Live API"}
+            {directMode ? "Direct feed · real data" : "Scrapper API"}
           </span>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <StatusPill label="Feed" value={status?.scraperConnected ? "FF + MetalsMine" : "Offline"} ok={Boolean(status?.scraperConnected)} />
@@ -101,7 +101,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Activity className="size-3.5" aria-hidden />
               {directMode
                 ? "Direct feed — calendar (Forex Factory + MetalsMine), XAUUSD price (Binance PAXG/USDT) and news are real; only what-if releases are local. Not advice."
-                : "Live API mode — data comes from your scrapper server. Not advice."}
+                : "Scrapper API mode — data comes from your scrapper server. Not advice."}
             </div>
           </footer>
         </div>
