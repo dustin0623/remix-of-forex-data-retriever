@@ -13,6 +13,8 @@ import { statusRoutes } from "./routes/status.js";
 import { analyzeRoutes } from "./routes/analyze.js";
 import { cotRoutes } from "./routes/cot.js";
 import { CotService } from "../services/cotService.js";
+import { newsRoutes } from "./routes/news.js";
+import { NewsService } from "../services/newsService.js";
 
 export interface BuildAppOptions {
   config: AppConfig;
@@ -23,9 +25,11 @@ export interface BuildAppOptions {
   aiProvider?: AIProvider | null;
   /** Override the COT service (tests). */
   cotService?: CotService;
+  /** Override the news service (tests). */
+  newsService?: NewsService;
 }
 
-export async function buildApp({ config, provider, logger = false, now, aiProvider, cotService }: BuildAppOptions): Promise<FastifyInstance> {
+export async function buildApp({ config, provider, logger = false, now, aiProvider, cotService, newsService }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     logger: logger ? { redact: ["req.headers.authorization", "*.anthropicApiKey"] } : false,
   });
@@ -70,5 +74,6 @@ export async function buildApp({ config, provider, logger = false, now, aiProvid
   await app.register(calendarRoutes, { service });
   await app.register(analyzeRoutes, { ai });
   await app.register(cotRoutes, { cot: cotService ?? new CotService() });
+  await app.register(newsRoutes, { news: newsService ?? new NewsService() });
   return app;
 }
