@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/market/PageHeader";
 import { StatCard } from "@/components/market/StatCard";
 import { SimulatedTag } from "@/components/market/badges";
 import { eventsQuery, goldAnalysisQuery, snapshotQuery } from "@/services/marketService";
+import { useAiConfigured } from "@/stores/settingsStore";
 
 export const Route = createFileRoute("/gold")({
   head: () => ({
@@ -28,7 +29,8 @@ export const Route = createFileRoute("/gold")({
 });
 
 function GoldPage() {
-  const analysis = useQuery(goldAnalysisQuery());
+  const aiConfigured = useAiConfigured();
+  const analysis = useQuery({ ...goldAnalysisQuery(), enabled: aiConfigured, staleTime: 10 * 60_000 });
   const snapshot = useQuery(snapshotQuery());
   const events = useQuery(eventsQuery());
 
