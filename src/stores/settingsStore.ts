@@ -86,7 +86,12 @@ export const useSettingsStore = create<SettingsState>()(
           ...current,
           ...p,
           aiKeys: { ...current.aiKeys, ...(p.aiKeys ?? {}) },
-          aiModels: { ...current.aiModels, ...(p.aiModels ?? {}) },
+          aiModels: Object.fromEntries(
+            (Object.keys(AI_PROVIDERS) as AiProvider[]).map((k) => {
+              const saved = p.aiModels?.[k];
+              return [k, saved && AI_PROVIDERS[k].models.includes(saved) ? saved : AI_PROVIDERS[k].defaultModel];
+            }),
+          ) as Record<AiProvider, string>,
         };
       },
       partialize: (s) => ({
