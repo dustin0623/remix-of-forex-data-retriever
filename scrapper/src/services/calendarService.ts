@@ -1,5 +1,7 @@
 import type { EventRepository } from "../database/repository.js";
-import type { ChangesQuery, EconomicEvent, EventChange, EventSnapshot, ResponseMeta } from "../models/schemas.js";
+import type {
+  ChangesQuery, EconomicEvent, EventChange, EventSnapshot, ResponseMeta, SourceFilter,
+} from "../models/schemas.js";
 import type { CalendarProvider } from "../scraper/CalendarProvider.js";
 import { addDays, isSameUtcDay, startOfUtcDay } from "../utils/dates.js";
 import { ApiError } from "../utils/response.js";
