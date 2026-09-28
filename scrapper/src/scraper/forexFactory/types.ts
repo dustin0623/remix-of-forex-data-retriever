@@ -1,13 +1,20 @@
 export type FFImpact = "low" | "medium" | "high";
 export type GoldRelevance = "low" | "medium" | "high" | "very_high";
 
-/** Normalized Forex Factory event (the scraper's own output shape). */
+/** Upstream calendar feeds (both hosted by Fair Economy). */
+export type FeedSource = "forexfactory" | "metalsmine";
+/** Source attribution after merging; "both" when the event appears in each feed. */
+export type EventSource = FeedSource | "both";
+
+/** Normalized calendar event (the scraper's own output shape). */
 export interface ForexFactoryEvent {
   id: string;
-  source: "forexfactory";
+  source: EventSource;
   event: string;
   currency: string;
   impact: FFImpact;
+  /** MetalsMine's own impact rating, when the event exists in that feed. */
+  metalsImpact: FFImpact | null;
   /** ISO 8601, UTC. */
   datetime: string;
   actual: string | null;
