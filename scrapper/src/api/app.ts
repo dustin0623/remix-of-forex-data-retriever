@@ -11,6 +11,8 @@ import { ApiError, fail } from "../utils/response.js";
 import { calendarRoutes } from "./routes/calendar.js";
 import { statusRoutes } from "./routes/status.js";
 import { analyzeRoutes } from "./routes/analyze.js";
+import { cotRoutes } from "./routes/cot.js";
+import { CotService } from "../services/cotService.js";
 
 export interface BuildAppOptions {
   config: AppConfig;
@@ -19,9 +21,11 @@ export interface BuildAppOptions {
   now?: () => Date;
   /** Override the AI provider (tests). null = AI disabled. */
   aiProvider?: AIProvider | null;
+  /** Override the COT service (tests). */
+  cotService?: CotService;
 }
 
-export async function buildApp({ config, provider, logger = false, now, aiProvider }: BuildAppOptions): Promise<FastifyInstance> {
+export async function buildApp({ config, provider, logger = false, now, aiProvider, cotService }: BuildAppOptions): Promise<FastifyInstance> {
   const app = Fastify({
     logger: logger ? { redact: ["req.headers.authorization", "*.anthropicApiKey"] } : false,
   });
@@ -65,5 +69,6 @@ export async function buildApp({ config, provider, logger = false, now, aiProvid
   await app.register(statusRoutes, { config, service, providerName: source.name, aiConfigured: ai.configured });
   await app.register(calendarRoutes, { service });
   await app.register(analyzeRoutes, { ai });
+  await app.register(cotRoutes, { cot: cotService ?? new CotService() });
   return app;
 }
