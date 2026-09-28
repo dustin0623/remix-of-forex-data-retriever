@@ -104,8 +104,17 @@ async function callModel(p: z.infer<typeof Base>, system: string, user: string):
   if (res.status === 401 || res.status === 403) aiError("The AI provider rejected the API key. Check it in Settings.");
   if (res.status === 429) aiError("The AI provider rate-limited this key. Try again in a minute.");
   if (!res.ok) {
-    console.error(`[ai] ${p.provider} HTTP ${res.status}`);
-    aiError(`The AI provider returned an error (HTTP ${res.status}). Check the model name in Settings.`);
+    let detail = "";
+    try {
+      const b = (await res.json()) as any;
+      detail = String(b?.error?.message ?? b?.message ?? "").slice(0, 200);
+    } catch {}
+    console.error(`[ai] ${p.provider} HTTP ${res.status} ${detail}`);
+    aiError(
+      res.status === 404
+        ? `Model "${p.model}" was not found for this ${p.provider} key. Pick another model in Settings.${detail ? ` (${detail})` : ""}`
+        : `The AI provider returned an error (HTTP ${res.status}).${detail ? ` ${detail}` : ""}`,
+    );
   }
   const body = (await res.json()) as any;
   const text: string | undefined =
