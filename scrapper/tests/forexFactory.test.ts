@@ -58,6 +58,33 @@ describe("ForexFactoryParser", () => {
     expect(merged.find((e) => e.event.startsWith("Non-Farm"))!.actual).toBeNull();
   });
 
+  it("tags the feed each event came from", () => {
+    expect(parseExport(metalsJson, "metalsmine").events[0]).toMatchObject({
+      source: "metalsmine",
+      metalsImpact: "medium",
+    });
+    expect(parseExport(exportJson)[0 as never] ?? parseExport(exportJson).events[0]).toMatchObject({
+      source: "forexfactory",
+      metalsImpact: null,
+    });
+  });
+
+  it("merges both feeds into one calendar, keeping the strongest impact", () => {
+    const ff = parseExport(exportJson).events;
+    const mm = parseExport(metalsJson, "metalsmine").events;
+    const merged = mergeFeeds(ff, mm);
+    // Core PCE is in both feeds: one entry, tagged "both".
+    const pce = merged.filter((e) => e.event.startsWith("Core PCE"));
+    expect(pce).toHaveLength(1);
+    expect(pce[0]).toMatchObject({ source: "both", impact: "high", metalsImpact: "medium" });
+    // Metals-only events survive, forex-only events survive.
+    expect(merged.find((e) => e.event === "LME Copper Inventories")!.source).toBe("metalsmine");
+    expect(merged.find((e) => e.event.startsWith("Non-Farm"))!.source).toBe("forexfactory");
+    expect(merged.map((e) => e.datetime)).toEqual([...merged.map((e) => e.datetime)].sort());
+  });
+
+
+
   it("normalizes impact labels and icon classes", () => {
     expect(normalizeImpact("High")).toBe("high");
     expect(normalizeImpact("icon--ff-impact-ora")).toBe("medium");
