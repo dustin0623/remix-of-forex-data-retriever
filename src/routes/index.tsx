@@ -209,7 +209,11 @@ function Dashboard() {
         </section>
       </div>
 
-      <AnalysisCard analysis={analysis.data} loading={analysis.isLoading} />
+      <AnalysisCard
+        analysis={analysis.data}
+        loading={aiConfigured && (analysis.isLoading || week.isLoading)}
+        needsKey={!aiConfigured}
+      />
     </>
   );
 }
