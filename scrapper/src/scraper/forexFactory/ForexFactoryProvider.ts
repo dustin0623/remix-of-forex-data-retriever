@@ -9,7 +9,8 @@ import { consoleLogger, type ForexFactoryEvent, type ScraperLogger } from "./typ
 
 export interface ForexFactoryProviderOptions {
   client: ForexFactoryClient;
-  minIntervalMs: number;
+  /** @deprecated throttling moved to CalendarCache; ignored. */
+  minIntervalMs?: number;
   /** Also fetch the HTML calendar to fill in actual values (export has none). */
   enrichActuals: boolean;
   relevance?: GoldRelevanceService;
@@ -17,14 +18,12 @@ export interface ForexFactoryProviderOptions {
   now?: () => Date;
 }
 
-/** Retry floor when we have nothing cached yet, so a cold failure can't hammer upstream. */
-const COLD_RETRY_MS = 60_000;
-
+/**
+ * Stateless apart from in-flight de-duplication: every call hits upstream.
+ * Caching, throttling and stale fallback live in CalendarService/CalendarCache.
+ */
 export class ForexFactoryProvider implements CalendarProvider {
   readonly name = "forexfactory";
-  private cache: ForexFactoryEvent[] | null = null;
-  private lastSuccessAt = 0;
-  private lastAttemptAt = 0;
   private inflight: Promise<ForexFactoryEvent[]> | null = null;
   private readonly relevance: GoldRelevanceService;
   private readonly log: ScraperLogger;
@@ -36,20 +35,12 @@ export class ForexFactoryProvider implements CalendarProvider {
     this.now = opts.now ?? (() => new Date());
   }
 
-  /** Normalized scraper output (with relevance), respecting the min interval. */
   async getNormalizedWeek(): Promise<ForexFactoryEvent[]> {
-    const t = this.now().getTime();
-    if (this.cache && t - this.lastSuccessAt < this.opts.minIntervalMs) return this.cache;
-    if (this.cache && t - this.lastAttemptAt < this.opts.minIntervalMs) return this.cache;
-    if (!this.cache && this.lastAttemptAt && t - this.lastAttemptAt < COLD_RETRY_MS) {
-      throw new ApiError(503, "UPSTREAM_UNAVAILABLE", "Calendar source unavailable; retry later");
-    }
     this.inflight ??= this.refresh().finally(() => (this.inflight = null));
     return this.inflight;
   }
 
   private async refresh(): Promise<ForexFactoryEvent[]> {
-    this.lastAttemptAt = this.now().getTime();
     try {
       const { events, skipped } = parseExport(await this.opts.client.fetchWeekExport());
       let merged = events;
@@ -60,13 +51,11 @@ export class ForexFactoryProvider implements CalendarProvider {
           this.log.warn({ error: (err as Error).message }, "actuals enrichment failed; using export only");
         }
       }
-      this.cache = merged.map((e) => ({ ...e, goldRelevance: this.relevance.classify(e) }));
-      this.lastSuccessAt = this.lastAttemptAt;
-      this.log.info({ events: this.cache.length, skipped }, "calendar refreshed");
-      return this.cache;
+      const out = merged.map((e) => ({ ...e, goldRelevance: this.relevance.classify(e) }));
+      this.log.info({ events: out.length, skipped }, "calendar fetched");
+      return out;
     } catch (err) {
-      this.log.error({ error: (err as Error).message }, "calendar refresh failed");
-      if (this.cache) return this.cache; // serve stale rather than fail
+      this.log.error({ error: (err as Error).message }, "calendar fetch failed");
       throw new ApiError(503, "UPSTREAM_UNAVAILABLE", "Calendar source unavailable; retry later");
     }
   }

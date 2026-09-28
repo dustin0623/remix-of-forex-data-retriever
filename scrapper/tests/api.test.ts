@@ -1,7 +1,7 @@
 import type { FastifyInstance } from "fastify";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { EconomicEventSchema } from "../src/models/schemas.js";
-import { testApp } from "./helpers.js";
+import { FIXED_NOW, testApp } from "./helpers.js";
 
 let app: FastifyInstance;
 beforeEach(async () => { app = await testApp(); });
@@ -16,7 +16,12 @@ describe("GET /api/status", () => {
   it("returns status without secrets", async () => {
     const { status, body, raw } = await get("/api/status");
     expect(status).toBe(200);
-    expect(body).toEqual({ status: "ok", scraper: true, ai: false, aiProvider: "anthropic", aiModel: "claude-haiku-4-5" });
+    expect(body).toMatchObject({ status: "ok", scraper: true, ai: false, aiProvider: "anthropic", aiModel: "claude-haiku-4-5", provider: "mock", lastScrapeAt: null, cachedEvents: 0, recentChanges: 0 });
+    await get("/api/calendar/week");
+    const after = (await get("/api/status")).body;
+    expect(after.lastScrapeAt).toBe(FIXED_NOW.toISOString());
+    expect(after.nextAllowedScrapeAt).toBe(new Date(FIXED_NOW.getTime() + 900_000).toISOString());
+    expect(after.cachedEvents).toBeGreaterThan(0);
     expect(raw).not.toContain("sk-secret-test");
   });
 });
