@@ -79,9 +79,7 @@ function usdRelevance(currency: string, impact: Impact): Relevance {
   return impact === "high" ? "low" : "none";
 }
 
-function hhmm(iso: string, raw: string): string {
-  // Feed dates are published in US Eastern; keep the UTC time for display consistency.
-  if (/T00:00:00/.test(raw) && false) return "All Day";
+function hhmm(iso: string): string {
   return iso.slice(11, 16);
 }
 
@@ -96,7 +94,7 @@ function toEvent(row: Row, feed: Feed): EconomicEvent | null {
   return {
     id: buildEventId(currency, title, datetime),
     datetime,
-    time: hhmm(datetime, row.date ?? ""),
+    time: hhmm(datetime),
     currency,
     title,
     impact,

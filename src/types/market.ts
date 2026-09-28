@@ -1,5 +1,5 @@
 export type Impact = "low" | "medium" | "high";
-export type Currency = "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "NZD" | "CNY";
+export type Currency = "USD" | "EUR" | "GBP" | "JPY" | "AUD" | "CAD" | "CHF" | "NZD" | "CNY" | (string & {});
 export type Relevance = "none" | "low" | "medium" | "high";
 export type Bias = "bullish" | "bearish" | "neutral";
 export type EventStatus = "UPCOMING" | "RELEASED" | "UPDATED";
@@ -72,7 +72,7 @@ export interface MarketAnalysis {
   usdContext: string;
   scenarios: Scenario[];
   generatedAt: string;
-  simulated: true;
+  simulated: boolean;
 }
 
 export interface ApiStatus {

@@ -31,13 +31,24 @@ interface SimState {
   seq: number;
 }
 
-const STORAGE_KEY = "fmi.simulation.v1";
+const STORAGE_KEY = "fmi.simulation.v2";
 const PREVIOUS_CLOSE = 2660.75;
 
 let state: SimState | null = null;
 
+/** Baseline calendar: real scraped events once synced, synthetic mock events until then. */
+let baselineEvents: EconomicEvent[] = mockEvents;
+let baselineIsReal = false;
+
+export function setBaseline(events: EconomicEvent[]) {
+  baselineEvents = events;
+  if (!baselineIsReal && state) state.changes = state.changes.filter((c) => events.some((e) => e.id === c.eventId));
+  baselineIsReal = true;
+}
+export const hasRealBaseline = () => baselineIsReal;
+
 function emptyState(): SimState {
-  return { overrides: {}, changes: [...mockChanges], seq: mockChanges.length };
+  return { overrides: {}, changes: baselineIsReal ? [] : [...mockChanges], seq: mockChanges.length };
 }
 
 function load(): SimState {
@@ -104,7 +115,7 @@ function apply(event: EconomicEvent): EconomicEvent {
 }
 
 function allEvents(): EconomicEvent[] {
-  return mockEvents
+  return baselineEvents
     .map(apply)
     .sort((a, b) => new Date(a.datetime).getTime() - new Date(b.datetime).getTime());
 }
@@ -149,7 +160,7 @@ export function getWeekEvents() {
   });
 }
 export function getEvent(id: string): EconomicEvent | null {
-  const e = mockEvents.find((x) => x.id === id);
+  const e = baselineEvents.find((x) => x.id === id);
   return e ? apply(e) : null;
 }
 export function getChanges(): EventChange[] {
@@ -217,7 +228,7 @@ function baseline(hour: number): number {
 
 /** Gold reaction to a simulated USD data surprise (strong USD data → gold lower). */
 function releaseImpact(change: EventChange): number {
-  const event = mockEvents.find((e) => e.id === change.eventId);
+  const event = baselineEvents.find((e) => e.id === change.eventId);
   if (!event || event.currency !== "USD" || event.goldRelevance === "none") return 0;
   if (change.field !== "actual") return 0;
   const actual = parseValue(change.newValue);
