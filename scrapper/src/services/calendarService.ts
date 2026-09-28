@@ -58,7 +58,7 @@ export class CalendarService {
   }
 
   async goldRelevant() {
-    return (await this.week()).filter((e) => e.goldRelevance === "high" || e.goldRelevance === "medium");
+    return (await this.week()).filter((e) => ["very_high", "high", "medium"].includes(e.goldRelevance));
   }
 
   async byId(id: string): Promise<EconomicEvent | null> {

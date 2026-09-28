@@ -1,16 +1,19 @@
 {
   "name": "forex-scrapper-api",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "description": "Independent Forex calendar API (Phase 3: mock provider).",
-  "engines": { "node": ">=22.13" },
+  "engines": {
+    "node": ">=22.13"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "scraper:test": "tsx src/scripts/scraperTest.ts"
   },
   "dependencies": {
     "cheerio": "^1.0.0",

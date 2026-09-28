@@ -3,7 +3,7 @@ import type { AppConfig } from "../config/env.js";
 import { openDatabase } from "../database/db.js";
 import { SqliteEventRepository } from "../database/repository.js";
 import type { CalendarProvider } from "../scraper/CalendarProvider.js";
-import { MockCalendarProvider } from "../scraper/MockCalendarProvider.js";
+import { createProvider } from "../scraper/createProvider.js";
 import { CalendarService } from "../services/calendarService.js";
 import { ApiError, fail } from "../utils/response.js";
 import { calendarRoutes } from "./routes/calendar.js";
@@ -22,7 +22,7 @@ export async function buildApp({ config, provider, logger = false }: BuildAppOpt
 
   const db = openDatabase(config.databaseUrl);
   app.addHook("onClose", async () => db.close());
-  const service = new CalendarService(provider ?? new MockCalendarProvider(), new SqliteEventRepository(db));
+  const service = new CalendarService(provider ?? createProvider(config, app.log), new SqliteEventRepository(db));
 
   app.addHook("onSend", async (_req, reply, payload) => {
     reply.header("Access-Control-Allow-Origin", "*");

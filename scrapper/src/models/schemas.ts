@@ -1,8 +1,8 @@
 import { z } from "zod";
 
 export const ImpactSchema = z.enum(["low", "medium", "high"]);
-export const CurrencySchema = z.enum(["USD", "EUR", "GBP", "JPY", "AUD", "CAD", "CHF", "NZD", "CNY"]);
-export const RelevanceSchema = z.enum(["none", "low", "medium", "high"]);
+export const CurrencySchema = z.string().regex(/^[A-Z]{3}$/);
+export const RelevanceSchema = z.enum(["none", "low", "medium", "high", "very_high"]);
 export const EventStatusSchema = z.enum(["UPCOMING", "RELEASED", "UPDATED"]);
 
 /** Mirrors the frontend's EconomicEvent (src/types/market.ts). */
