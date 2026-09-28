@@ -49,13 +49,13 @@ function stripTags(s: string): string {
 
 function tag(block: string, name: string): string | null {
   const m = block.match(new RegExp(`<${name}[^>]*>([\\s\\S]*?)</${name}>`));
-  return m ? stripTags(m[1]) : null;
+  return m?.[1] != null ? stripTags(m[1]) : null;
 }
 
 export function parseRss(xml: string): NewsItem[] {
   const out: NewsItem[] = [];
   for (const m of xml.matchAll(/<item>([\s\S]*?)<\/item>/g)) {
-    const b = m[1];
+    const b = m[1] ?? "";
     const title = tag(b, "title");
     const url = tag(b, "link");
     const date = tag(b, "pubDate");
