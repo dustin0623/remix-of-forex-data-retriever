@@ -20,12 +20,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Simulated macro dashboard: today's economic events, XAUUSD snapshot and a mock market overview.",
+          "Macro dashboard: today's real Forex Factory + MetalsMine events, live XAUUSD price and AI market overview.",
       },
       { property: "og:title", content: "Dashboard — Forex Market Intelligence" },
       {
         property: "og:description",
-        content: "Simulated macro dashboard for USD events and gold-relevant releases.",
+        content: "Real economic calendar, live gold price and AI-driven market overview for XAUUSD traders.",
       },
     ],
   }),
@@ -52,8 +52,8 @@ function Dashboard() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Session overview built entirely from simulated data. Nothing here is a live market feed."
-        actions={<SimulatedTag label="Simulated data" />}
+        description="Real Forex Factory + MetalsMine calendar and live gold price (Binance PAXG/USDT). Release outcomes stay simulated until you sync."
+        actions={<SimulatedTag label="Simulation · real calendar" />}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
