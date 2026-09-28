@@ -44,7 +44,7 @@ export function decodeEntities(s: string): string {
 }
 
 function stripTags(s: string): string {
-  return decodeEntities(s.replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
+  return decodeEntities(s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").replace(/<br\s*\/?>/gi, " ").replace(/<[^>]+>/g, "")).replace(/\s+/g, " ").trim();
 }
 
 function tag(block: string, name: string): string | null {
