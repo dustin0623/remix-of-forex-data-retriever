@@ -75,7 +75,7 @@ function EventDetails() {
 
       <PageHeader
         title={event.title}
-        description={`${event.currency} · ${new Date(event.datetime).toLocaleString()} · ${event.source}`}
+        description={`${event.currency} · ${new Date(event.datetime).toLocaleString()} · ${event.source} · ${feedLabel(event.feed)}`}
         actions={
           <div className="flex items-center gap-2">
             <ImpactBadge impact={event.impact} />
