@@ -101,7 +101,7 @@ export function CotCard() {
   );
 }
 
-function Metric({ label, value, sub }: { label: string; value: string; sub?: string }) {
+function Metric({ label, value, sub }: { label: string; value: string; sub?: string | undefined }) {
   return (
     <div>
       <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
