@@ -156,8 +156,12 @@ describe("provider selection", () => {
   it("defaults to mock", () => {
     expect(createProvider(loadConfig({}))).toBeInstanceOf(MockCalendarProvider);
   });
-  it("selects forexfactory via CALENDAR_PROVIDER", () => {
-    expect(createProvider(loadConfig({ CALENDAR_PROVIDER: "forexfactory" }), silent).name).toBe("forexfactory");
+  it("selects the combined Fair Economy provider via CALENDAR_PROVIDER", () => {
+    expect(createProvider(loadConfig({ CALENDAR_PROVIDER: "forexfactory" }), silent).name).toBe("faireconomy");
+  });
+  it("reads the enabled sources from SCRAPER_SOURCES", () => {
+    expect(loadConfig({}).scraper.sources).toEqual(["forexfactory", "metalsmine"]);
+    expect(loadConfig({ SCRAPER_SOURCES: "metalsmine" }).scraper.sources).toEqual(["metalsmine"]);
   });
   it("uses mock when scraper is disabled", () => {
     expect(createProvider(loadConfig({ CALENDAR_PROVIDER: "forexfactory", SCRAPER_ENABLED: "false" }))).toBeInstanceOf(MockCalendarProvider);
