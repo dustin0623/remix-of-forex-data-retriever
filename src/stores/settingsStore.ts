@@ -83,7 +83,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "fmi-settings",
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       migrate: (persisted) => persisted as SettingsState,
@@ -92,6 +92,8 @@ export const useSettingsStore = create<SettingsState>()(
         return {
           ...current,
           ...p,
+          dataSource: p.dataSource === "live" ? "live" : "direct",
+          directMode: p.dataSource !== "live",
           aiKeys: { ...current.aiKeys, ...(p.aiKeys ?? {}) },
           aiModels: Object.fromEntries(
             (Object.keys(AI_PROVIDERS) as AiProvider[]).map((k) => {

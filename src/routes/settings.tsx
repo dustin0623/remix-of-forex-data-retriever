@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { testAiKey } from "@/lib/ai.functions";
 import { testMyfxbookLogin } from "@/lib/sentiment.functions";
+import { createScrapperClient } from "@/services/api/apiClient";
 import { getBaselineInfo, syncLiveCalendar } from "@/services/api/mockApi";
 import { AI_PROVIDERS, type AiProvider, type PostStyle } from "@/stores/settingsStore";
 
@@ -82,8 +83,12 @@ function SettingsPage() {
           </Select>
         </Row>
 
-        <Row title="API base URL" description="Address of the scrapper server used in Live API mode.">
+        <Row title="API base URL" description="Address of the scrapper server used in Scrapper API mode.">
           <Input value={apiBaseUrl} onChange={(e) => setApiBaseUrl(e.target.value)} className="num" />
+        </Row>
+
+        <Row title="Test Scrapper API" description="Checks that your scrapper server answers before you switch to it.">
+          <ScrapperTestButton baseUrl={apiBaseUrl} />
         </Row>
 
         <Row title="Theme" description="The trading terminal palette is tuned for low-light desks.">
@@ -201,6 +206,29 @@ function MyfxbookSettings() {
         </div>
       </Row>
     </section>
+  );
+}
+
+function ScrapperTestButton({ baseUrl }: { baseUrl: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      disabled={busy || !baseUrl}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          const s = await createScrapperClient(baseUrl).getStatus();
+          toast.success(`Scrapper API connected (${s.provider})`);
+        } catch (err) {
+          toast.error(`Could not reach the Scrapper API: ${(err as Error).message}`);
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      {busy ? "Testing…" : "Test connection"}
+    </Button>
   );
 }
 

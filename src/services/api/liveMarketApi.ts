@@ -45,7 +45,7 @@ export class NotInLiveModeError extends Error {
 }
 
 export function createLiveMarketApi(client: ScrapperClient): MarketApi {
-  const whatIfOnly = () => Promise.reject(new Error("What-if controls are disabled in Live API mode."));
+  const whatIfOnly = () => Promise.reject(new Error("What-if controls are disabled in Scrapper API mode."));
   return {
     getCalendar: async (range = "all") => {
       const r =
