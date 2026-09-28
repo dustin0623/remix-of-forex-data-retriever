@@ -50,10 +50,10 @@ export function AnalysisCard({
   title = "AI Market Overview",
   showUsdContext = false,
 }: {
-  analysis?: MarketAnalysis | null;
-  loading?: boolean;
-  title?: string;
-  showUsdContext?: boolean;
+  analysis?: MarketAnalysis | null | undefined;
+  loading?: boolean | undefined;
+  title?: string | undefined;
+  showUsdContext?: boolean | undefined;
 }) {
   return (
     <section className="panel p-5">

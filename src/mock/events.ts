@@ -8,10 +8,10 @@ import type { EconomicEvent, EventChange } from "@/types/market";
  */
 
 function atOffset(dayOffset: number, hhmm: string): string {
-  const [h, m] = hhmm.split(":").map(Number);
+  const parts = hhmm.split(":").map(Number);
   const d = new Date();
   d.setDate(d.getDate() + dayOffset);
-  d.setHours(h, m, 0, 0);
+  d.setHours(parts[0] ?? 0, parts[1] ?? 0, 0, 0);
   return d.toISOString();
 }
 
@@ -382,10 +382,11 @@ export function simulateActual(event: EconomicEvent): string {
   if (!base) return "Released — no numeric value";
   const match = base.match(/^(-?\d+(?:\.\d+)?)(.*)$/);
   if (!match) return base;
-  const value = Number(match[1]);
-  const suffix = match[2];
+  const numeric = match[1] ?? "0";
+  const value = Number(numeric);
+  const suffix = match[2] ?? "";
   const drift = ((event.id.charCodeAt(event.id.length - 1) % 7) - 3) / 10;
   const next = value * (1 + drift * 0.12) + drift;
-  const decimals = match[1].includes(".") ? match[1].split(".")[1].length : 0;
+  const decimals = numeric.includes(".") ? (numeric.split(".")[1]?.length ?? 0) : 0;
   return `${next.toFixed(decimals)}${suffix}`;
 }
