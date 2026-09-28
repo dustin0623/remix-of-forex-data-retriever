@@ -168,12 +168,29 @@ export const testAiKey = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+const HeadlineIn = z.object({
+  id: z.string().max(300),
+  source: z.string().max(20),
+  title: z.string().max(400),
+  publishedAt: z.string().max(40),
+});
+
 export const analyzeGold = createServerFn({ method: "POST" })
-  .inputValidator((d: unknown) => Base.extend({ events: z.array(EventIn).max(60) }).parse(d))
+  .inputValidator((d: unknown) =>
+    Base.extend({
+      events: z.array(EventIn).max(60),
+      headlines: z.array(HeadlineIn).max(40).optional(),
+    }).parse(d),
+  )
   .handler(async ({ data }) => {
+    const news = data.headlines?.length
+      ? `\n\nRecent breaking headlines (UTC). Weigh only those that plausibly move gold (safe-haven demand, USD, real yields, oil/geopolitics, central banks); ignore the rest:\n${data.headlines
+          .map((h) => `- ${h.publishedAt} (${h.source}) ${h.title}`)
+          .join("\n")}`
+      : "";
     const user = `This week's gold-relevant calendar (UTC):\n${data.events
       .map((e) => `- ${e.datetime} ${e.currency} [${e.impact}, gold:${e.goldRelevance}] ${e.title} | actual ${e.actual ?? "-"} | forecast ${e.forecast ?? "-"} | previous ${e.previous ?? "-"}`)
-      .join("\n")}
+      .join("\n")}${news}
 
 Return JSON: {"bias":"bullish|bearish|neutral","confidence":0-100,"summary":string,"keyDrivers":string[],"mainRisks":string[],"usdContext":string,"scenarios":[{"type":"bullish|bearish|neutral","title":string,"probability":0-100,"trigger":string,"outcome":string}]}`;
     const parsed = AnalysisOut.safeParse(parseJson(await callModel(data, SYSTEM, user)));
@@ -181,6 +198,7 @@ Return JSON: {"bias":"bullish|bearish|neutral","confidence":0-100,"summary":stri
     if (BANNED.test(JSON.stringify(parsed.data))) aiError("The AI response contained trading-call language and was rejected. Try again.");
     return { ...parsed.data, generatedAt: new Date().toISOString() };
   });
+
 
 export const generateMasterPost = createServerFn({ method: "POST" })
   .inputValidator((d: unknown) =>
