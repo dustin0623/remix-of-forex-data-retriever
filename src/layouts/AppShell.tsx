@@ -7,6 +7,8 @@ import {
   CircleDot,
   Coins,
   LayoutDashboard,
+  Newspaper,
+
   Settings as SettingsIcon,
   TerminalSquare,
 } from "lucide-react";
@@ -19,7 +21,9 @@ const nav = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard, exact: true },
   { to: "/calendar", label: "Economic Calendar", icon: CalendarDays },
   { to: "/gold", label: "Gold Analysis", icon: Coins },
+  { to: "/news", label: "Breaking News", icon: Newspaper },
   { to: "/api-explorer", label: "API Explorer", icon: TerminalSquare },
+
   { to: "/settings", label: "Settings", icon: SettingsIcon },
 ] as const;
 

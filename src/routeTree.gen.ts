@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiExplorerRouteImport } from './routes/api-explorer'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as GoldRouteImport } from './routes/gold'
+import { Route as NewsRouteImport } from './routes/news'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as EventsIdRouteImport } from './routes/events.$id'
 
@@ -36,6 +37,11 @@ const GoldRoute = GoldRouteImport.update({
   path: '/gold',
   getParentRoute: () => rootRouteImport,
 } as any)
+const NewsRoute = NewsRouteImport.update({
+  id: '/news',
+  path: '/news',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -52,6 +58,7 @@ export interface FileRoutesByFullPath {
   '/api-explorer': typeof ApiExplorerRoute
   '/calendar': typeof CalendarRoute
   '/gold': typeof GoldRoute
+  '/news': typeof NewsRoute
   '/settings': typeof SettingsRoute
   '/events/$id': typeof EventsIdRoute
 }
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/api-explorer': typeof ApiExplorerRoute
   '/calendar': typeof CalendarRoute
   '/gold': typeof GoldRoute
+  '/news': typeof NewsRoute
   '/settings': typeof SettingsRoute
   '/events/$id': typeof EventsIdRoute
 }
@@ -69,22 +77,36 @@ export interface FileRoutesById {
   '/api-explorer': typeof ApiExplorerRoute
   '/calendar': typeof CalendarRoute
   '/gold': typeof GoldRoute
+  '/news': typeof NewsRoute
   '/settings': typeof SettingsRoute
   '/events/$id': typeof EventsIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/api-explorer' | '/calendar' | '/gold' | '/settings' | '/events/$id'
+    | '/'
+    | '/api-explorer'
+    | '/calendar'
+    | '/gold'
+    | '/news'
+    | '/settings'
+    | '/events/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
-    '/' | '/api-explorer' | '/calendar' | '/gold' | '/settings' | '/events/$id'
+    | '/'
+    | '/api-explorer'
+    | '/calendar'
+    | '/gold'
+    | '/news'
+    | '/settings'
+    | '/events/$id'
   id:
     | '__root__'
     | '/'
     | '/api-explorer'
     | '/calendar'
     | '/gold'
+    | '/news'
     | '/settings'
     | '/events/$id'
   fileRoutesById: FileRoutesById
@@ -94,6 +116,7 @@ export interface RootRouteChildren {
   ApiExplorerRoute: typeof ApiExplorerRoute
   CalendarRoute: typeof CalendarRoute
   GoldRoute: typeof GoldRoute
+  NewsRoute: typeof NewsRoute
   SettingsRoute: typeof SettingsRoute
   EventsIdRoute: typeof EventsIdRoute
 }
@@ -128,6 +151,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof GoldRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/news': {
+      id: '/news'
+      path: '/news'
+      fullPath: '/news'
+      preLoaderRoute: typeof NewsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -150,6 +180,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiExplorerRoute: ApiExplorerRoute,
   CalendarRoute: CalendarRoute,
   GoldRoute: GoldRoute,
+  NewsRoute: NewsRoute,
   SettingsRoute: SettingsRoute,
   EventsIdRoute: EventsIdRoute,
 }
