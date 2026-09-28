@@ -86,17 +86,25 @@ describe("GoldRelevanceService", () => {
   });
 });
 
-function fakeClient(opts: { exportFail?: boolean; htmlFail?: boolean } = {}) {
+function fakeClient(opts: { exportFail?: boolean; htmlFail?: boolean; metalsFail?: boolean } = {}) {
   return {
     fetchWeekExport: vi.fn(async () => {
       if (opts.exportFail) throw new UpstreamError("down", 503);
       return exportJson;
     }),
+    fetchMetalsExport: vi.fn(async () => {
+      if (opts.metalsFail) throw new UpstreamError("down", 503);
+      return metalsJson;
+    }),
     fetchWeekHtml: vi.fn(async () => {
       if (opts.htmlFail) throw new UpstreamError("blocked", 403);
       return html;
     }),
-  } as unknown as ForexFactoryClient & { fetchWeekExport: ReturnType<typeof vi.fn>; fetchWeekHtml: ReturnType<typeof vi.fn> };
+  } as unknown as ForexFactoryClient & {
+    fetchWeekExport: ReturnType<typeof vi.fn>;
+    fetchMetalsExport: ReturnType<typeof vi.fn>;
+    fetchWeekHtml: ReturnType<typeof vi.fn>;
+  };
 }
 
 describe("ForexFactoryProvider", () => {
