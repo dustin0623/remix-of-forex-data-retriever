@@ -83,8 +83,8 @@ function CalendarPage() {
     <>
       <PageHeader
         title="Economic Calendar"
-        description="Simulated calendar rows shaped like Forex Factory records. Select any row for full event detail."
-        actions={<SimulatedTag label="Simulated data" />}
+        description="Real Forex Factory + MetalsMine events for this week. Select any row for full event detail."
+        actions={<SimulatedTag label="Real calendar" />}
       />
 
       <section className="panel p-4">

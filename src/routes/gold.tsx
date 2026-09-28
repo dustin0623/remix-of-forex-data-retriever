@@ -3,6 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { AnalysisCard } from "@/components/market/AnalysisCard";
 import { EventsTable } from "@/components/market/EventsTable";
+import { MasterPostPanel } from "@/components/market/MasterPostPanel";
 import { PageHeader } from "@/components/market/PageHeader";
 import { StatCard } from "@/components/market/StatCard";
 import { SimulatedTag } from "@/components/market/badges";
@@ -39,8 +40,8 @@ function GoldPage() {
     <>
       <PageHeader
         title="Gold Analysis"
-        description="Every figure and scenario below is produced by a local simulation. It is not market analysis and not advice."
-        actions={<SimulatedTag label="Simulated analysis" />}
+        description="Real Forex Factory + MetalsMine events. The analysis uses your own AI key (Settings); without one, a sample analysis is shown. Not advice."
+        actions={<SimulatedTag label={analysis.data?.simulated === false ? "AI analysis" : "Sample analysis"} />}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -72,6 +73,8 @@ function GoldPage() {
           loading={events.isLoading}
         />
       </div>
+
+      <MasterPostPanel events={goldEvents} />
 
       <AnalysisCard
         analysis={analysis.data}

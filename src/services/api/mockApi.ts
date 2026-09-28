@@ -1,26 +1,97 @@
-import { mockApiStatus, mockDashboardAnalysis, mockGoldAnalysis } from "@/mock/analysis";
+import { analyzeGold } from "@/lib/ai.functions";
+import { fetchRealCalendar } from "@/lib/calendar.functions";
+import { mockDashboardAnalysis, mockGoldAnalysis } from "@/mock/analysis";
 import * as sim from "@/services/mock/simulationService";
+import { AI_PROVIDERS, currentAiConfig, useSettingsStore } from "@/stores/settingsStore";
+import type { EconomicEvent, MarketAnalysis } from "@/types/market";
 
 import type { MarketApi } from "./types";
 
-const LATENCY_MS = 280;
+/**
+ * Simulation implementation: the baseline is the REAL Forex Factory + MetalsMine
+ * calendar (fetched server-side); what-if releases/revisions stay local overrides.
+ */
 
-function respond<T>(fn: () => T, latency = LATENCY_MS): Promise<T> {
-  return new Promise((resolve, reject) =>
-    setTimeout(() => {
-      try {
-        resolve(fn());
-      } catch (err) {
-        reject(err);
-      }
-    }, latency),
-  );
+const SNAPSHOT_KEY = "fmi.calendar.snapshot.v1";
+
+export interface BaselineInfo {
+  kind: "live" | "cache" | "snapshot" | "synthetic";
+  fetchedAt: string | null;
+  feeds: { forexfactory: boolean; metalsmine: boolean };
+  error: string | null;
 }
 
-/** Simulation implementation of the MarketApi contract. */
+let baselineInfo: BaselineInfo = { kind: "synthetic", fetchedAt: null, feeds: { forexfactory: false, metalsmine: false }, error: null };
+let loading: Promise<void> | null = null;
+let loaded = false;
+
+export const getBaselineInfo = () => baselineInfo;
+
+async function loadBaseline(force: boolean) {
+  try {
+    const res = await fetchRealCalendar({ data: { force } });
+    sim.setBaseline(res.events);
+    baselineInfo = { kind: res.meta.source, fetchedAt: res.meta.fetchedAt, feeds: res.meta.feeds, error: res.meta.error };
+    try {
+      localStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ events: res.events, fetchedAt: res.meta.fetchedAt, feeds: res.meta.feeds }));
+    } catch { /* storage full */ }
+  } catch (err) {
+    const raw = typeof window !== "undefined" ? localStorage.getItem(SNAPSHOT_KEY) : null;
+    if (raw) {
+      const snap = JSON.parse(raw) as { events: EconomicEvent[]; fetchedAt: string; feeds: BaselineInfo["feeds"] };
+      sim.setBaseline(snap.events);
+      baselineInfo = { kind: "snapshot", fetchedAt: snap.fetchedAt, feeds: snap.feeds, error: "Calendar feeds unreachable; using your last saved week." };
+    } else {
+      baselineInfo = { ...baselineInfo, kind: "synthetic", error: (err as Error).message };
+    }
+  }
+}
+
+async function ensureBaseline() {
+  if (typeof window === "undefined" || loaded) return;
+  loading ??= loadBaseline(false).finally(() => { loaded = true; loading = null; });
+  await loading;
+}
+
+/** Pulls the latest real calendar (bypassing the 5-minute cache) and clears what-if overrides. */
+export async function syncLiveCalendar() {
+  await loadBaseline(true);
+  loaded = true;
+  sim.resetSimulation();
+}
+
+const wrap = <T>(fn: () => T) => ensureBaseline().then(fn);
+
+async function aiGoldAnalysis(subject: "dashboard" | "gold"): Promise<MarketAnalysis> {
+  const cfg = currentAiConfig();
+  const fallback = subject === "gold" ? mockGoldAnalysis : mockDashboardAnalysis;
+  if (!cfg) return { ...fallback, bias: sim.getMarketSnapshot().macroBias };
+  const events = sim
+    .getWeekEvents()
+    .filter((e) => e.goldRelevance === "high" || e.goldRelevance === "medium" || e.feed !== "forexfactory")
+    .slice(0, 60)
+    .map(({ title, currency, impact, datetime, actual, forecast, previous, goldRelevance }) => ({
+      title, currency, impact, datetime, actual, forecast, previous, goldRelevance,
+    }));
+  const r = await analyzeGold({ data: { ...cfg, events } });
+  return {
+    id: `ai-${subject}-${Date.now()}`,
+    subject: `XAUUSD — ${AI_PROVIDERS[cfg.provider].label} (${cfg.model})`,
+    bias: r.bias,
+    confidence: r.confidence,
+    summary: r.summary,
+    keyDrivers: r.keyDrivers,
+    mainRisks: r.mainRisks,
+    usdContext: r.usdContext,
+    scenarios: r.scenarios,
+    generatedAt: r.generatedAt,
+    simulated: false,
+  };
+}
+
 export const mockApi: MarketApi = {
   getCalendar: (range = "all") =>
-    respond(() =>
+    wrap(() =>
       range === "today"
         ? sim.getTodayEvents()
         : range === "tomorrow"
@@ -29,17 +100,26 @@ export const mockApi: MarketApi = {
             ? sim.getWeekEvents()
             : sim.getAllEvents(),
     ),
-  getEvent: (id) => respond(() => sim.getEvent(id)),
-  getChanges: () => respond(() => sim.getChanges()),
-  getMarketAnalysis: (subject) =>
-    respond(() => {
-      const base = subject === "gold" ? mockGoldAnalysis : mockDashboardAnalysis;
-      return { ...base, bias: sim.getMarketSnapshot().macroBias };
-    }, 600),
-  getMarketSnapshot: () => respond(() => sim.getMarketSnapshot()),
-  getMarketTimeline: () => respond(() => sim.getMarketTimeline()),
-  getStatus: () => respond(() => mockApiStatus, 150),
-  simulateRelease: (id) => respond(() => sim.simulateEventRelease(id), 150),
-  simulateUpdate: (id) => respond(() => sim.simulateEventUpdate(id), 150),
-  resetSimulation: () => respond(() => sim.resetSimulation(), 150),
+  getEvent: (id) => wrap(() => sim.getEvent(id)),
+  getChanges: () => wrap(() => sim.getChanges()),
+  getMarketAnalysis: (subject) => ensureBaseline().then(() => aiGoldAnalysis(subject)),
+  getMarketSnapshot: () => wrap(() => sim.getMarketSnapshot()),
+  getMarketTimeline: () => wrap(() => sim.getMarketTimeline()),
+  getStatus: () =>
+    ensureBaseline().then(() => {
+      const cfg = currentAiConfig();
+      const provider = useSettingsStore.getState().aiProvider;
+      return {
+        environment: "simulation" as const,
+        apiMode: "Simulated" as const,
+        aiProvider: cfg ? AI_PROVIDERS[provider].label : "none",
+        aiConnected: Boolean(cfg),
+        scraperConnected: baselineInfo.kind === "live" || baselineInfo.kind === "cache",
+        version: "sim-real-baseline",
+        uptimeSeconds: 0,
+      };
+    }),
+  simulateRelease: (id) => wrap(() => sim.simulateEventRelease(id)),
+  simulateUpdate: (id) => wrap(() => sim.simulateEventUpdate(id)),
+  resetSimulation: () => wrap(() => sim.resetSimulation()),
 };
