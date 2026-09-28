@@ -20,20 +20,24 @@ const TOOL = "submit_market_analysis";
 export class AnthropicProvider implements AIProvider {
   readonly name = "anthropic";
   readonly model: string;
-  readonly #apiKey: string; // private field: never enumerated/serialised
+  // Private fields are never enumerated or serialised, so the key can't leak via logs/JSON.
+  readonly #apiKey: string;
+  readonly #opts: Omit<AnthropicProviderOptions, "apiKey">;
 
-  constructor(private readonly opts: AnthropicProviderOptions) {
+  constructor(opts: AnthropicProviderOptions) {
+    const { apiKey, ...rest } = opts;
     this.model = opts.model;
-    this.#apiKey = opts.apiKey;
+    this.#apiKey = apiKey;
+    this.#opts = rest;
   }
 
   async analyze(input: AnalysisInput): Promise<MarketAnalysis> {
-    const doFetch = this.opts.fetch ?? fetch;
+    const doFetch = this.#opts.fetch ?? fetch;
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort(), this.opts.timeoutMs ?? 30_000);
+    const timer = setTimeout(() => ctrl.abort(), this.#opts.timeoutMs ?? 30_000);
     let res: Response;
     try {
-      res = await doFetch(`${this.opts.baseUrl ?? "https://api.anthropic.com"}/v1/messages`, {
+      res = await doFetch(`${this.#opts.baseUrl ?? "https://api.anthropic.com"}/v1/messages`, {
         method: "POST",
         signal: ctrl.signal,
         headers: {
@@ -43,7 +47,7 @@ export class AnthropicProvider implements AIProvider {
         },
         body: JSON.stringify({
           model: this.model,
-          max_tokens: this.opts.maxTokens ?? 2048,
+          max_tokens: this.#opts.maxTokens ?? 2048,
           temperature: 0.2,
           system: SYSTEM_PROMPT,
           tools: [{ name: TOOL, description: "Submit the structured XAUUSD market analysis.", input_schema: MARKET_ANALYSIS_JSON_SCHEMA }],
