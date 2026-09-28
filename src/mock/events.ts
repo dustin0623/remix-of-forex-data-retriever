@@ -1,0 +1,391 @@
+import type { EconomicEvent, EventChange } from "@/types/market";
+
+/**
+ * SIMULATED DATA ONLY.
+ * Nothing in this folder touches the network. Shapes mirror the
+ * Forex Factory calendar rows the /scrapper service will return later,
+ * so swapping this module for real API calls requires no UI changes.
+ */
+
+function atOffset(dayOffset: number, hhmm: string): string {
+  const [h, m] = hhmm.split(":").map(Number);
+  const d = new Date();
+  d.setDate(d.getDate() + dayOffset);
+  d.setHours(h, m, 0, 0);
+  return d.toISOString();
+}
+
+type Seed = Omit<EconomicEvent, "id" | "datetime"> & { dayOffset: number };
+
+const seeds: Seed[] = [
+  {
+    dayOffset: 0,
+    time: "02:00",
+    currency: "JPY",
+    title: "BOJ Core CPI y/y",
+    impact: "low",
+    actual: "2.1%",
+    forecast: "2.0%",
+    previous: "2.0%",
+    goldRelevance: "low",
+    usdRelevance: "low",
+    source: "Bank of Japan",
+    description:
+      "Change in the price of goods and services purchased by consumers, excluding fresh food. A key input for BOJ policy expectations.",
+    history: [
+      { period: "Prev month", actual: "2.0%", forecast: "1.9%" },
+      { period: "2 months ago", actual: "1.9%", forecast: "1.9%" },
+      { period: "3 months ago", actual: "2.2%", forecast: "2.1%" },
+    ],
+  },
+  {
+    dayOffset: 0,
+    time: "09:00",
+    currency: "EUR",
+    title: "German Ifo Business Climate",
+    impact: "medium",
+    actual: "88.4",
+    forecast: "88.9",
+    previous: "88.6",
+    goldRelevance: "low",
+    usdRelevance: "medium",
+    source: "Ifo Institute",
+    description:
+      "Composite index based on surveyed manufacturers, builders, wholesalers and retailers rating business conditions in Germany.",
+    history: [
+      { period: "Prev month", actual: "88.6", forecast: "88.2" },
+      { period: "2 months ago", actual: "87.9", forecast: "88.0" },
+      { period: "3 months ago", actual: "89.1", forecast: "88.4" },
+    ],
+  },
+  {
+    dayOffset: 0,
+    time: "12:30",
+    currency: "USD",
+    title: "Core PCE Price Index m/m",
+    impact: "high",
+    actual: null,
+    forecast: "0.2%",
+    previous: "0.3%",
+    goldRelevance: "high",
+    usdRelevance: "high",
+    source: "Bureau of Economic Analysis",
+    description:
+      "The Federal Reserve's preferred inflation gauge. Hotter prints typically lift real yields and pressure gold; softer prints usually do the opposite.",
+    history: [
+      { period: "Prev month", actual: "0.3%", forecast: "0.2%" },
+      { period: "2 months ago", actual: "0.2%", forecast: "0.2%" },
+      { period: "3 months ago", actual: "0.4%", forecast: "0.3%" },
+    ],
+  },
+  {
+    dayOffset: 0,
+    time: "12:30",
+    currency: "USD",
+    title: "Unemployment Claims",
+    impact: "medium",
+    actual: null,
+    forecast: "221K",
+    previous: "218K",
+    goldRelevance: "medium",
+    usdRelevance: "high",
+    source: "Department of Labor",
+    description:
+      "Weekly count of individuals filing for unemployment insurance for the first time. A fast read on labour-market momentum.",
+    history: [
+      { period: "Last week", actual: "218K", forecast: "223K" },
+      { period: "2 weeks ago", actual: "227K", forecast: "220K" },
+      { period: "3 weeks ago", actual: "214K", forecast: "219K" },
+    ],
+  },
+  {
+    dayOffset: 0,
+    time: "14:00",
+    currency: "USD",
+    title: "Pending Home Sales m/m",
+    impact: "low",
+    actual: null,
+    forecast: "0.8%",
+    previous: "-1.2%",
+    goldRelevance: "none",
+    usdRelevance: "low",
+    source: "National Association of Realtors",
+    description: "Change in the number of homes under contract to be sold but awaiting closing.",
+    history: [
+      { period: "Prev month", actual: "-1.2%", forecast: "0.4%" },
+      { period: "2 months ago", actual: "2.0%", forecast: "1.1%" },
+      { period: "3 months ago", actual: "-0.6%", forecast: "0.2%" },
+    ],
+  },
+  {
+    dayOffset: 0,
+    time: "18:00",
+    currency: "USD",
+    title: "FOMC Member Speech",
+    impact: "high",
+    actual: null,
+    forecast: null,
+    previous: null,
+    goldRelevance: "high",
+    usdRelevance: "high",
+    source: "Federal Reserve",
+    description:
+      "Unscripted remarks on policy outlook. Hawkish language tends to strengthen USD and weigh on XAUUSD.",
+    history: [],
+  },
+  {
+    dayOffset: 1,
+    time: "All Day",
+    currency: "EUR",
+    title: "ECB Economic Bulletin",
+    impact: "low",
+    actual: null,
+    forecast: null,
+    previous: null,
+    goldRelevance: "low",
+    usdRelevance: "low",
+    source: "European Central Bank",
+    description: "Detailed analysis of the economic conditions underpinning ECB policy decisions.",
+    history: [],
+  },
+  {
+    dayOffset: 1,
+    time: "08:30",
+    currency: "GBP",
+    title: "Final GDP q/q",
+    impact: "medium",
+    actual: null,
+    forecast: "0.3%",
+    previous: "0.3%",
+    goldRelevance: "low",
+    usdRelevance: "medium",
+    source: "Office for National Statistics",
+    description: "Final estimate of the change in inflation-adjusted value of all goods and services produced.",
+    history: [
+      { period: "Prev quarter", actual: "0.3%", forecast: "0.2%" },
+      { period: "2 quarters ago", actual: "0.1%", forecast: "0.2%" },
+    ],
+  },
+  {
+    dayOffset: 1,
+    time: "12:30",
+    currency: "USD",
+    title: "Non-Farm Employment Change",
+    impact: "high",
+    actual: null,
+    forecast: "168K",
+    previous: "142K",
+    goldRelevance: "high",
+    usdRelevance: "high",
+    source: "Bureau of Labor Statistics",
+    description:
+      "Headline change in employed people excluding the farming industry. The single largest scheduled volatility driver for USD pairs and XAUUSD.",
+    history: [
+      { period: "Prev month", actual: "142K", forecast: "160K" },
+      { period: "2 months ago", actual: "254K", forecast: "140K" },
+      { period: "3 months ago", actual: "89K", forecast: "175K" },
+    ],
+  },
+  {
+    dayOffset: 1,
+    time: "12:30",
+    currency: "USD",
+    title: "Average Hourly Earnings m/m",
+    impact: "high",
+    actual: null,
+    forecast: "0.3%",
+    previous: "0.4%",
+    goldRelevance: "high",
+    usdRelevance: "high",
+    source: "Bureau of Labor Statistics",
+    description: "Change in the price businesses pay for labour, excluding the farming industry.",
+    history: [
+      { period: "Prev month", actual: "0.4%", forecast: "0.3%" },
+      { period: "2 months ago", actual: "0.2%", forecast: "0.3%" },
+    ],
+  },
+  {
+    dayOffset: 2,
+    time: "01:30",
+    currency: "AUD",
+    title: "Retail Sales m/m",
+    impact: "medium",
+    actual: null,
+    forecast: "0.4%",
+    previous: "0.7%",
+    goldRelevance: "low",
+    usdRelevance: "low",
+    source: "Australian Bureau of Statistics",
+    description: "Change in the total value of sales at the retail level.",
+    history: [{ period: "Prev month", actual: "0.7%", forecast: "0.3%" }],
+  },
+  {
+    dayOffset: 2,
+    time: "14:00",
+    currency: "USD",
+    title: "ISM Manufacturing PMI",
+    impact: "high",
+    actual: null,
+    forecast: "47.6",
+    previous: "47.2",
+    goldRelevance: "medium",
+    usdRelevance: "high",
+    source: "Institute for Supply Management",
+    description:
+      "Diffusion index of purchasing managers in manufacturing. Readings below 50 signal contraction.",
+    history: [
+      { period: "Prev month", actual: "47.2", forecast: "47.5" },
+      { period: "2 months ago", actual: "46.8", forecast: "47.0" },
+    ],
+  },
+  {
+    dayOffset: 3,
+    time: "12:30",
+    currency: "CAD",
+    title: "Employment Change",
+    impact: "medium",
+    actual: null,
+    forecast: "22.5K",
+    previous: "46.7K",
+    goldRelevance: "none",
+    usdRelevance: "low",
+    source: "Statistics Canada",
+    description: "Change in the number of employed people during the previous month.",
+    history: [{ period: "Prev month", actual: "46.7K", forecast: "27.0K" }],
+  },
+  {
+    dayOffset: 3,
+    time: "18:00",
+    currency: "USD",
+    title: "FOMC Meeting Minutes",
+    impact: "high",
+    actual: null,
+    forecast: null,
+    previous: null,
+    goldRelevance: "high",
+    usdRelevance: "high",
+    source: "Federal Reserve",
+    description:
+      "Detailed record of the latest policy meeting, watched for dissent and forward guidance on the rate path.",
+    history: [],
+  },
+  {
+    dayOffset: 4,
+    time: "09:00",
+    currency: "EUR",
+    title: "Core CPI Flash Estimate y/y",
+    impact: "high",
+    actual: null,
+    forecast: "2.7%",
+    previous: "2.8%",
+    goldRelevance: "medium",
+    usdRelevance: "medium",
+    source: "Eurostat",
+    description: "First estimate of euro-area consumer inflation excluding energy, food, alcohol and tobacco.",
+    history: [
+      { period: "Prev month", actual: "2.8%", forecast: "2.8%" },
+      { period: "2 months ago", actual: "2.9%", forecast: "2.8%" },
+    ],
+  },
+  {
+    dayOffset: 5,
+    time: "14:00",
+    currency: "USD",
+    title: "Prelim UoM Consumer Sentiment",
+    impact: "medium",
+    actual: null,
+    forecast: "70.8",
+    previous: "70.1",
+    goldRelevance: "low",
+    usdRelevance: "medium",
+    source: "University of Michigan",
+    description: "Survey-based composite index of consumer confidence in economic activity.",
+    history: [{ period: "Prev month", actual: "70.1", forecast: "69.4" }],
+  },
+  {
+    dayOffset: -1,
+    time: "12:30",
+    currency: "USD",
+    title: "Final GDP q/q",
+    impact: "medium",
+    actual: "3.0%",
+    forecast: "2.9%",
+    previous: "2.9%",
+    goldRelevance: "medium",
+    usdRelevance: "high",
+    source: "Bureau of Economic Analysis",
+    description: "Final estimate of the annualised change in US economic output.",
+    history: [
+      { period: "Prev quarter", actual: "2.9%", forecast: "2.8%" },
+      { period: "2 quarters ago", actual: "1.4%", forecast: "1.3%" },
+    ],
+  },
+  {
+    dayOffset: -1,
+    time: "14:30",
+    currency: "USD",
+    title: "Crude Oil Inventories",
+    impact: "low",
+    actual: "-4.5M",
+    forecast: "-1.2M",
+    previous: "0.8M",
+    goldRelevance: "low",
+    usdRelevance: "low",
+    source: "Energy Information Administration",
+    description: "Weekly change in the number of barrels of commercial crude oil held by US firms.",
+    history: [{ period: "Last week", actual: "0.8M", forecast: "-0.4M" }],
+  },
+];
+
+export const mockEvents: EconomicEvent[] = seeds.map((seed, index) => {
+  const { dayOffset, ...rest } = seed;
+  return {
+    ...rest,
+    id: `evt-${String(index + 1).padStart(3, "0")}`,
+    datetime: rest.time === "All Day" ? atOffset(dayOffset, "00:00") : atOffset(dayOffset, rest.time),
+  };
+});
+
+export const mockChanges: EventChange[] = [
+  {
+    id: "chg-001",
+    eventId: "evt-017",
+    eventTitle: "Final GDP q/q",
+    field: "actual",
+    from: null,
+    to: "3.0%",
+    detectedAt: atOffset(-1, "12:31"),
+  },
+  {
+    id: "chg-002",
+    eventId: "evt-009",
+    eventTitle: "Non-Farm Employment Change",
+    field: "forecast",
+    from: "160K",
+    to: "168K",
+    detectedAt: atOffset(-1, "16:05"),
+  },
+  {
+    id: "chg-003",
+    eventId: "evt-018",
+    eventTitle: "Crude Oil Inventories",
+    field: "actual",
+    from: null,
+    to: "-4.5M",
+    detectedAt: atOffset(-1, "14:31"),
+  },
+];
+
+/** Deterministic simulated release value used by the "Simulate Release" action. */
+export function simulateActual(event: EconomicEvent): string {
+  const base = event.forecast ?? event.previous;
+  if (!base) return "Released — no numeric value";
+  const match = base.match(/^(-?\d+(?:\.\d+)?)(.*)$/);
+  if (!match) return base;
+  const value = Number(match[1]);
+  const suffix = match[2];
+  const drift = ((event.id.charCodeAt(event.id.length - 1) % 7) - 3) / 10;
+  const next = value * (1 + drift * 0.12) + drift;
+  const decimals = match[1].includes(".") ? match[1].split(".")[1].length : 0;
+  return `${next.toFixed(decimals)}${suffix}`;
+}
