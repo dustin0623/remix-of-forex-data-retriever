@@ -22,8 +22,11 @@ cp .env.example .env
 | `PORT` | `5000` | HTTP port |
 | `DATABASE_URL` | `./data/forex.db` | SQLite file path (`:memory:` allowed) |
 | `SCRAPER_ENABLED` | `true` | Reported in `/api/status` |
-| `AI_ENABLED` | `false` | Reported in `/api/status` |
+| `AI_ENABLED` | `false` | Enables `/api/analyze/*` (also needs a key) |
 | `AI_PROVIDER` | `anthropic` | |
+| `ANTHROPIC_API_KEY` | _(empty)_ | Optional; never returned or logged |
+| `ANTHROPIC_MODEL` | `claude-haiku-4-5` | Model used for analysis |
+| `AI_TIMEOUT_MS` | `30000` | AI request timeout |
 | `ANTHROPIC_API_KEY` | _(empty)_ | Never returned or logged |
 | `ANTHROPIC_MODEL` | `claude-haiku-4-5` | |
 
@@ -67,6 +70,24 @@ which returns its object directly.
   only `last_seen_at` is touched. New hash: snapshot + change records (`actual_released`,
   `actual_revised`, `forecast_changed`, `previous_changed`, `impact_changed`, `event_updated`)
   + event update. Unique indexes prevent duplicate snapshots/changes.
+
+## Optional AI analysis (Phase 6)
+
+AI is optional: without `AI_ENABLED=true` and `ANTHROPIC_API_KEY`, everything else works and
+`/api/analyze/*` returns `503 AI_NOT_CONFIGURED`.
+
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/analyze/gold/today` | XAUUSD context from today's gold-relevant/high-impact events + 24h changes |
+| GET | `/api/analyze/event/:id` | Market impact of one event, framed for XAUUSD |
+| GET | `/api/analyze/gold/event/:id` | Gold-specific scenarios for one event |
+
+Response: `{ success, data: MarketAnalysis, meta: { aiProvider, model, generatedAt } }`.
+Claude receives structured JSON only (no HTML), is told never to invent data, and must answer via a
+forced tool call. Output is validated with Zod and **rejected if it contains trading calls**
+(BUY/SELL, entry, stop loss, take profit, position size, leverage). Errors: `AI_INVALID_API_KEY` (502),
+`AI_RATE_LIMITED` (429 + Retry-After), `AI_TIMEOUT` (504), `AI_MALFORMED_RESPONSE` (502), `AI_PROVIDER_ERROR` (502).
+Code lives in `src/ai/` (`AIProvider`, `AnthropicProvider`, `AIService`, `prompts/`, `schemas/`).
 
 ## Architecture
 
