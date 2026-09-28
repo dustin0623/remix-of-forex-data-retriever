@@ -26,25 +26,47 @@ const Base = z.object({
   model: z.string().min(1).max(80),
 });
 
+// Lenient output parsing: models often overshoot lengths, return numbers as
+// strings, capitalise enums or send 0–1 confidences. Normalise instead of failing.
+const txt = (max: number) =>
+  z.preprocess((v) => (v == null ? "" : typeof v === "string" ? v : Array.isArray(v) ? v.join(" ") : String(v)), z.string().transform((s) => s.trim().slice(0, max)));
+const pct = z.preprocess((v) => {
+  const n = typeof v === "string" ? parseFloat(v) : Number(v);
+  if (!Number.isFinite(n)) return 50;
+  const p = n > 0 && n <= 1 ? n * 100 : n;
+  return Math.max(0, Math.min(100, Math.round(p)));
+}, z.number());
+const biasEnum = z.preprocess((v) => {
+  const s = String(v ?? "").toLowerCase();
+  return s.includes("bull") ? "bullish" : s.includes("bear") ? "bearish" : "neutral";
+}, z.enum(["bullish", "bearish", "neutral"]));
+const list = (maxItems: number, maxLen: number) =>
+  z.preprocess(
+    (v) => (Array.isArray(v) ? v : typeof v === "string" && v ? [v] : []),
+    z.array(txt(maxLen)).transform((a) => a.filter(Boolean).slice(0, maxItems)),
+  );
+
 const AnalysisOut = z.object({
-  bias: z.enum(["bullish", "bearish", "neutral"]),
-  confidence: z.number().min(0).max(100),
-  summary: z.string().min(10).max(1500),
-  keyDrivers: z.array(z.string().max(300)).min(1).max(6),
-  mainRisks: z.array(z.string().max(300)).min(1).max(6),
-  usdContext: z.string().max(800),
-  scenarios: z
-    .array(
-      z.object({
-        type: z.enum(["bullish", "bearish", "neutral"]),
-        title: z.string().max(120),
-        probability: z.number().min(0).max(100),
-        trigger: z.string().max(300),
-        outcome: z.string().max(300),
-      }),
-    )
-    .min(1)
-    .max(3),
+  bias: biasEnum,
+  confidence: pct,
+  summary: txt(1500).refine((s) => s.length >= 10),
+  keyDrivers: list(6, 300),
+  mainRisks: list(6, 300),
+  usdContext: txt(800),
+  scenarios: z.preprocess(
+    (v) => (Array.isArray(v) ? v : []),
+    z
+      .array(
+        z.object({
+          type: biasEnum,
+          title: txt(120),
+          probability: pct,
+          trigger: txt(300),
+          outcome: txt(300),
+        }),
+      )
+      .transform((a) => a.slice(0, 3)),
+  ),
 });
 
 const BANNED = /\b(buy now|sell now|go long|go short|entry at|take profit|stop loss|guaranteed|to the moon|100% sure)\b/i;
@@ -95,7 +117,7 @@ async function sendOnce(p: z.infer<typeof Base>, system: string, user: string): 
       },
       body: JSON.stringify({
         model: p.model,
-        max_tokens: 1500,
+        max_tokens: 4000,
         system,
         messages: [{ role: "user", content: `${user}\n\nRespond with JSON only.` }],
       }),
@@ -194,7 +216,10 @@ export const analyzeGold = createServerFn({ method: "POST" })
 
 Return JSON: {"bias":"bullish|bearish|neutral","confidence":0-100,"summary":string,"keyDrivers":string[],"mainRisks":string[],"usdContext":string,"scenarios":[{"type":"bullish|bearish|neutral","title":string,"probability":0-100,"trigger":string,"outcome":string}]}`;
     const parsed = AnalysisOut.safeParse(parseJson(await callModel(data, SYSTEM, user)));
-    if (!parsed.success) aiError("The AI response did not match the expected analysis format. Try again.");
+    if (!parsed.success) {
+      console.error("[ai] analysis schema mismatch", parsed.error.issues.slice(0, 5));
+      aiError("The AI response did not match the expected analysis format. Try again.");
+    }
     if (BANNED.test(JSON.stringify(parsed.data))) aiError("The AI response contained trading-call language and was rejected. Try again.");
     return { ...parsed.data, generatedAt: new Date().toISOString() };
   });
