@@ -76,21 +76,24 @@ export class CalendarService {
     }
   }
 
-  private async filtered(pred: (e: EconomicEvent) => boolean): Promise<CalendarResult<EconomicEvent[]>> {
+  private async filtered(
+    pred: (e: EconomicEvent) => boolean,
+    source: SourceFilter = "all",
+  ): Promise<CalendarResult<EconomicEvent[]>> {
     const r = await this.week();
-    return { data: r.data.filter(pred), meta: r.meta };
+    return { data: r.data.filter((e) => pred(e) && matchesSource(e, source)), meta: r.meta };
   }
 
-  today() {
+  today(source: SourceFilter = "all") {
     const d = startOfUtcDay(this.now());
-    return this.filtered((e) => isSameUtcDay(e.datetime, d));
+    return this.filtered((e) => isSameUtcDay(e.datetime, d), source);
   }
-  tomorrow() {
+  tomorrow(source: SourceFilter = "all") {
     const d = addDays(startOfUtcDay(this.now()), 1);
-    return this.filtered((e) => isSameUtcDay(e.datetime, d));
+    return this.filtered((e) => isSameUtcDay(e.datetime, d), source);
   }
-  highImpact() { return this.filtered((e) => e.impact === "high"); }
-  goldRelevant() { return this.filtered((e) => GOLD.includes(e.goldRelevance)); }
+  highImpact(source: SourceFilter = "all") { return this.filtered((e) => e.impact === "high", source); }
+  goldRelevant(source: SourceFilter = "all") { return this.filtered((e) => GOLD.includes(e.goldRelevance), source); }
 
   async byId(id: string): Promise<EconomicEvent | null> {
     const stored = this.repo.findById(id);
