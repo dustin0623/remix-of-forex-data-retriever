@@ -1,4 +1,4 @@
-import type { EconomicEvent, EventChange } from "@/types/market";
+import type { EconomicEvent, EventChange, EventSource } from "@/types/market";
 
 /**
  * SIMULATED DATA ONLY.
