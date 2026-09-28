@@ -10,6 +10,17 @@ const EnvSchema = z.object({
   PORT: z.coerce.number().int().positive().default(5000),
   DATABASE_URL: z.string().min(1).default("./data/forex.db"),
   SCRAPER_ENABLED: bool.default("true"),
+  CALENDAR_PROVIDER: z.enum(["mock", "forexfactory"]).default("mock"),
+  SCRAPER_MIN_INTERVAL_MS: z.coerce.number().int().min(60_000).default(900_000),
+  SCRAPER_TIMEOUT_MS: z.coerce.number().int().positive().default(15_000),
+  SCRAPER_MAX_RETRIES: z.coerce.number().int().min(0).max(5).default(3),
+  SCRAPER_RETRY_BASE_MS: z.coerce.number().int().positive().default(1_000),
+  SCRAPER_ENRICH_ACTUALS: bool.default("true"),
+  SCRAPER_EXPORT_URL: z.string().url().default("https://nfs.faireconomy.media/ff_calendar_thisweek.json"),
+  SCRAPER_HTML_URL: z.string().url().default("https://www.forexfactory.com/calendar?week=this"),
+  SCRAPER_USER_AGENT: z
+    .string()
+    .default("Mozilla/5.0 (compatible; forex-scrapper-api/0.4; +low-frequency calendar reader)"),
   AI_ENABLED: bool.default("false"),
   AI_PROVIDER: z.string().default("anthropic"),
   ANTHROPIC_API_KEY: z.string().optional().default(""),
@@ -20,6 +31,17 @@ export type AppConfig = {
   port: number;
   databaseUrl: string;
   scraperEnabled: boolean;
+  calendarProvider: "mock" | "forexfactory";
+  scraper: {
+    minIntervalMs: number;
+    timeoutMs: number;
+    maxRetries: number;
+    retryBaseMs: number;
+    enrichActuals: boolean;
+    exportUrl: string;
+    htmlUrl: string;
+    userAgent: string;
+  };
   aiEnabled: boolean;
   aiProvider: string;
   aiModel: string;
@@ -33,6 +55,17 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): AppConfig {
     port: e.PORT,
     databaseUrl: e.DATABASE_URL,
     scraperEnabled: e.SCRAPER_ENABLED,
+    calendarProvider: e.CALENDAR_PROVIDER,
+    scraper: {
+      minIntervalMs: e.SCRAPER_MIN_INTERVAL_MS,
+      timeoutMs: e.SCRAPER_TIMEOUT_MS,
+      maxRetries: e.SCRAPER_MAX_RETRIES,
+      retryBaseMs: e.SCRAPER_RETRY_BASE_MS,
+      enrichActuals: e.SCRAPER_ENRICH_ACTUALS,
+      exportUrl: e.SCRAPER_EXPORT_URL,
+      htmlUrl: e.SCRAPER_HTML_URL,
+      userAgent: e.SCRAPER_USER_AGENT,
+    },
     aiEnabled: e.AI_ENABLED,
     aiProvider: e.AI_PROVIDER,
     aiModel: e.ANTHROPIC_MODEL,
