@@ -9,7 +9,7 @@ import type {
 } from "@/types/market";
 
 /**
- * SIMULATION ENGINE — frontend only, no network.
+ * WHAT-IF ENGINE — frontend only, no network.
  *
  * Behaves like a live Forex Factory-style calendar: events move from UPCOMING
  * to RELEASED (and UPDATED on revision), every mutation is diffed into a
@@ -31,7 +31,7 @@ interface SimState {
   seq: number;
 }
 
-const STORAGE_KEY = "fmi.simulation.v2";
+const STORAGE_KEY = "fmi.whatif.v2";
 const PREVIOUS_CLOSE = 2660.75;
 
 let state: SimState | null = null;
@@ -170,7 +170,7 @@ export function getChanges(): EventChange[] {
 }
 
 /** Publishes an actual for an event whose actual is still null. */
-export function simulateEventRelease(id: string): { event: EconomicEvent; change: EventChange } {
+export function whatIfEventRelease(id: string): { event: EconomicEvent; change: EventChange } {
   const event = getEvent(id);
   if (!event) throw new Error(`Unknown event ${id}`);
   if (event.actual !== null) throw new Error("This event has already been released.");
@@ -193,7 +193,7 @@ export function simulateEventRelease(id: string): { event: EconomicEvent; change
  * Revises an event: the forecast before release, the actual after release.
  * Either way the event is marked UPDATED.
  */
-export function simulateEventUpdate(id: string): { event: EconomicEvent; change: EventChange } {
+export function whatIfEventUpdate(id: string): { event: EconomicEvent; change: EventChange } {
   const event = getEvent(id);
   if (!event) throw new Error(`Unknown event ${id}`);
   const s = load();
@@ -214,7 +214,7 @@ export function simulateEventUpdate(id: string): { event: EconomicEvent; change:
   return { event: getEvent(id)!, change };
 }
 
-export function resetSimulation() {
+export function resetWhatIf() {
   state = emptyState();
   if (typeof window !== "undefined") window.sessionStorage.removeItem(STORAGE_KEY);
 }
@@ -226,7 +226,7 @@ function baseline(hour: number): number {
   return PREVIOUS_CLOSE - 1.1 * hour + 6.5 * Math.sin(hour / 2.6) + 2.8 * Math.sin(hour * 1.9 + 1.3);
 }
 
-/** Gold reaction to a simulated USD data surprise (strong USD data → gold lower). */
+/** Gold reaction to a what-if USD data surprise (strong USD data → gold lower). */
 function releaseImpact(change: EventChange): number {
   const event = baselineEvents.find((e) => e.id === change.eventId);
   if (!event || event.currency !== "USD" || event.goldRelevance === "none") return 0;

@@ -8,7 +8,7 @@ import { ErrorState, PageHeader } from "@/components/market/PageHeader";
 import { MarketTimeline } from "@/components/market/MarketTimeline";
 import { RecentChanges } from "@/components/market/RecentChanges";
 import { StatCard } from "@/components/market/StatCard";
-import { SimulatedTag } from "@/components/market/badges";
+import { SourceTag } from "@/components/market/badges";
 import { Skeleton } from "@/components/ui/skeleton";
 import { changesQuery, dashboardAnalysisQuery, snapshotQuery, timelineQuery, todayEventsQuery } from "@/services/marketService";
 import { useAiConfigured } from "@/stores/settingsStore";
@@ -52,8 +52,8 @@ function Dashboard() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Real Forex Factory + MetalsMine calendar and live gold price (Binance PAXG/USDT). Release outcomes stay simulated until you sync."
-        actions={<SimulatedTag label="Simulation · real calendar" />}
+        description="Real Forex Factory + MetalsMine calendar and live gold price (Binance PAXG/USDT). Try what-if releases from any event page."
+        actions={<SourceTag label="Direct feed · real data" />}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -142,7 +142,7 @@ function Dashboard() {
         </div>
         {events.isError ? (
           <div className="p-4">
-            <ErrorState message="The simulation layer did not respond." onRetry={() => events.refetch()} />
+            <ErrorState message="The calendar feed did not respond." onRetry={() => events.refetch()} />
           </div>
         ) : (
           <EventsTable
@@ -157,7 +157,7 @@ function Dashboard() {
         <section className="panel">
           <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
             <h2 className="text-sm font-semibold">Recent changes</h2>
-            <SimulatedTag />
+            <SourceTag />
           </div>
           <RecentChanges changes={changes.data} loading={changes.isLoading} />
         </section>

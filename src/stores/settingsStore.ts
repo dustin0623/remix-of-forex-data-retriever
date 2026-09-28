@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-export type DataSource = "simulation" | "live";
+export type DataSource = "direct" | "live";
 export type AiProvider = "gemini" | "openai" | "anthropic";
 export type PostStyle = "professional" | "concise" | "educational";
 
@@ -33,9 +33,9 @@ export const AI_PROVIDERS: Record<AiProvider, { label: string; defaultModel: str
 };
 
 export interface SettingsState {
-  /** SIMULATION = real scraped calendar + local what-if overrides; LIVE = /scrapper API. */
+  /** DIRECT = real calendar fetched directly + local what-if overrides; LIVE = /scrapper API. */
   dataSource: DataSource;
-  simulationMode: boolean;
+  directMode: boolean;
   theme: "dark" | "system";
   apiBaseUrl: string;
   aiProvider: AiProvider;
@@ -62,8 +62,8 @@ export interface SettingsState {
 export const useSettingsStore = create<SettingsState>()(
   persist(
     (set) => ({
-      dataSource: "simulation",
-      simulationMode: true,
+      dataSource: "direct",
+      directMode: true,
       theme: "dark",
       apiBaseUrl: DEFAULT_API_BASE_URL,
       aiProvider: "gemini",
@@ -73,7 +73,7 @@ export const useSettingsStore = create<SettingsState>()(
       myfxbookEmail: "",
       myfxbookPassword: "",
       setMyfxbook: (myfxbookEmail, myfxbookPassword) => set({ myfxbookEmail: myfxbookEmail.trim(), myfxbookPassword }),
-      setDataSource: (dataSource) => set({ dataSource, simulationMode: dataSource === "simulation" }),
+      setDataSource: (dataSource) => set({ dataSource, directMode: dataSource === "direct" }),
       setTheme: (theme) => set({ theme }),
       setApiBaseUrl: (apiBaseUrl) => set({ apiBaseUrl: apiBaseUrl.trim().replace(/\/+$/, "") }),
       setAiProvider: (aiProvider) => set({ aiProvider }),
@@ -83,7 +83,7 @@ export const useSettingsStore = create<SettingsState>()(
     }),
     {
       name: "fmi-settings",
-      version: 3,
+      version: 4,
       storage: createJSONStorage(() => localStorage),
       skipHydration: true,
       migrate: (persisted) => persisted as SettingsState,
@@ -92,6 +92,8 @@ export const useSettingsStore = create<SettingsState>()(
         return {
           ...current,
           ...p,
+          dataSource: p.dataSource === "live" ? "live" : "direct",
+          directMode: p.dataSource !== "live",
           aiKeys: { ...current.aiKeys, ...(p.aiKeys ?? {}) },
           aiModels: Object.fromEntries(
             (Object.keys(AI_PROVIDERS) as AiProvider[]).map((k) => {
@@ -103,7 +105,7 @@ export const useSettingsStore = create<SettingsState>()(
       },
       partialize: (s) => ({
         dataSource: s.dataSource,
-        simulationMode: s.simulationMode,
+        directMode: s.directMode,
         theme: s.theme,
         apiBaseUrl: s.apiBaseUrl,
         aiProvider: s.aiProvider,

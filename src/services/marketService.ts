@@ -4,7 +4,7 @@ import { apiClient } from "@/services/api/apiClient";
 
 /**
  * React Query bindings over the apiClient. Query keys and signatures stay
- * stable when the apiClient implementation changes from simulation to real API.
+ * stable when the apiClient implementation changes from direct feed to the Scrapper API.
  */
 
 export function isSameDay(iso: string, offsetDays = 0): boolean {
@@ -45,13 +45,13 @@ export const changesQuery = () =>
 export const apiStatusQuery = () =>
   queryOptions({ queryKey: ["api-status"], queryFn: () => apiClient.getStatus(), staleTime: 30_000 });
 
-/** Simulation controls; every success refreshes all market queries. */
-export function useSimulationActions() {
+/** What-if controls; every success refreshes all market queries. */
+export function useWhatIfActions() {
   const qc = useQueryClient();
   const onSuccess = () => qc.invalidateQueries();
   return {
-    release: useMutation({ mutationFn: (id: string) => apiClient.simulateRelease(id), onSuccess }),
-    update: useMutation({ mutationFn: (id: string) => apiClient.simulateUpdate(id), onSuccess }),
-    reset: useMutation({ mutationFn: () => apiClient.resetSimulation(), onSuccess }),
+    release: useMutation({ mutationFn: (id: string) => apiClient.whatIfRelease(id), onSuccess }),
+    update: useMutation({ mutationFn: (id: string) => apiClient.whatIfUpdate(id), onSuccess }),
+    reset: useMutation({ mutationFn: () => apiClient.resetWhatIf(), onSuccess }),
   };
 }

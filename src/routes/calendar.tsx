@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 
 import { EventsTable } from "@/components/market/EventsTable";
 import { ErrorState, PageHeader } from "@/components/market/PageHeader";
-import { SimulatedTag } from "@/components/market/badges";
+import { SourceTag } from "@/components/market/badges";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,12 +26,12 @@ export const Route = createFileRoute("/calendar")({
       {
         name: "description",
         content:
-          "Filter simulated Forex Factory-style economic events by date, currency, impact and gold relevance.",
+          "Filter real Forex Factory + MetalsMine events by date, currency, impact and gold relevance.",
       },
       { property: "og:title", content: "Economic Calendar — Forex Market Intelligence" },
       {
         property: "og:description",
-        content: "Simulated economic calendar with currency, impact and gold-relevance filters.",
+        content: "Real economic calendar with currency, impact and gold-relevance filters.",
       },
     ],
   }),
@@ -84,7 +84,7 @@ function CalendarPage() {
       <PageHeader
         title="Economic Calendar"
         description="Real Forex Factory + MetalsMine events for this week. Select any row for full event detail."
-        actions={<SimulatedTag label="Real calendar" />}
+        actions={<SourceTag label="Real calendar" />}
       />
 
       <section className="panel p-4">
@@ -190,7 +190,7 @@ function CalendarPage() {
       <section className="panel">
         {events.isError ? (
           <div className="p-4">
-            <ErrorState message="The simulation layer did not respond." onRetry={() => events.refetch()} />
+            <ErrorState message="The calendar feed did not respond." onRetry={() => events.refetch()} />
           </div>
         ) : (
           <EventsTable events={filtered} loading={events.isLoading} showDate />

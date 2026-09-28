@@ -11,7 +11,7 @@ import { MasterPostPanel } from "@/components/market/MasterPostPanel";
 import { PageHeader } from "@/components/market/PageHeader";
 import { SentimentCard } from "@/components/market/SentimentCard";
 import { StatCard } from "@/components/market/StatCard";
-import { SimulatedTag } from "@/components/market/badges";
+import { SourceTag } from "@/components/market/badges";
 import { Button } from "@/components/ui/button";
 import { analyzeGold } from "@/lib/ai.functions";
 import { fetchNews } from "@/lib/news.functions";
@@ -81,7 +81,7 @@ function GoldPage() {
         usdContext: r.usdContext,
         scenarios: r.scenarios.map((s) => ({ ...s, probability: s.probability / 100 })),
         generatedAt: r.generatedAt,
-        simulated: false,
+        sample: false,
       });
       setMode("news");
     } catch (e) {
@@ -98,7 +98,7 @@ function GoldPage() {
       <PageHeader
         title="Gold Analysis"
         description="Real Forex Factory + MetalsMine events and live gold price. The outlook is written by your own AI key (Settings). Not advice."
-        actions={analysis.data?.simulated === false ? <SimulatedTag label="AI analysis" /> : null}
+        actions={analysis.data?.sample === false ? <SourceTag label="AI analysis" /> : null}
       />
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -185,13 +185,13 @@ function GoldPage() {
       <section className="panel">
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
           <h2 className="text-sm font-semibold">Key economic events for gold</h2>
-          <SimulatedTag />
+          <SourceTag />
         </div>
         <EventsTable
           events={goldEvents}
           loading={events.isLoading}
           showDate
-          emptyTitle="No gold-relevant events in the simulated window"
+          emptyTitle="No gold-relevant events this week"
         />
       </section>
     </>

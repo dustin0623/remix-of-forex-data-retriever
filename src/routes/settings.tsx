@@ -7,11 +7,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { testAiKey } from "@/lib/ai.functions";
 import { testMyfxbookLogin } from "@/lib/sentiment.functions";
+import { createScrapperClient } from "@/services/api/apiClient";
 import { getBaselineInfo, syncLiveCalendar } from "@/services/api/mockApi";
 import { AI_PROVIDERS, type AiProvider, type PostStyle } from "@/stores/settingsStore";
 
 import { PageHeader } from "@/components/market/PageHeader";
-import { SimulatedTag } from "@/components/market/badges";
+import { SourceTag } from "@/components/market/badges";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -28,12 +29,12 @@ export const Route = createFileRoute("/settings")({
       { title: "Settings — Forex Market Intelligence" },
       {
         name: "description",
-        content: "Simulation mode, theme, planned API endpoint and AI provider status.",
+        content: "Data source, Scrapper API connection, theme and AI keys.",
       },
       { property: "og:title", content: "Settings — Forex Market Intelligence" },
       {
         property: "og:description",
-        content: "Configure local preferences for the simulated Forex intelligence workspace.",
+        content: "Configure local preferences for the Forex intelligence workspace.",
       },
     ],
   }),
@@ -68,22 +69,26 @@ function SettingsPage() {
       <PageHeader
         title="Settings"
         description="Preferences and your own AI keys, stored only in this browser."
-        actions={<SimulatedTag label={dataSource === "live" ? "Live API" : "Simulation"} />}
+        actions={<SourceTag label={dataSource === "live" ? "Scrapper API" : "Direct feed"} />}
       />
 
       <section className="panel px-5 py-1">
-        <Row title="Data source" description="Simulation uses the real Forex Factory + MetalsMine calendar with local what-if releases. Live API reads from your scrapper server.">
-          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "simulation" | "live"); toast.success(v === "live" ? "Switched to Live API" : "Switched to Simulation"); }}>
+        <Row title="Data source" description="Direct feed pulls Forex Factory + MetalsMine, Binance and news straight from this app. Scrapper API reads the same data from your server.">
+          <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "direct" | "live"); toast.success(v === "live" ? "Switched to Scrapper API" : "Switched to Direct feed"); }}>
             <SelectTrigger aria-label="Data source"><SelectValue /></SelectTrigger>
             <SelectContent>
-              <SelectItem value="simulation">Simulation</SelectItem>
-              <SelectItem value="live">Live API</SelectItem>
+              <SelectItem value="direct">Direct feed</SelectItem>
+              <SelectItem value="live">Scrapper API</SelectItem>
             </SelectContent>
           </Select>
         </Row>
 
-        <Row title="API base URL" description="Address of the scrapper server used in Live API mode.">
+        <Row title="API base URL" description="Address of the scrapper server used in Scrapper API mode.">
           <Input value={apiBaseUrl} onChange={(e) => setApiBaseUrl(e.target.value)} className="num" />
+        </Row>
+
+        <Row title="Test Scrapper API" description="Checks that your scrapper server answers before you switch to it.">
+          <ScrapperTestButton baseUrl={apiBaseUrl} />
         </Row>
 
         <Row title="Theme" description="The trading terminal palette is tuned for low-light desks.">
@@ -98,7 +103,7 @@ function SettingsPage() {
           </Select>
         </Row>
 
-        <Row title="Real calendar" description="Pull the latest Forex Factory + MetalsMine week now. This clears simulated releases.">
+        <Row title="Real calendar" description="Pull the latest Forex Factory + MetalsMine week now. This clears what-if releases.">
           <SyncButton />
         </Row>
       </section>
@@ -201,6 +206,29 @@ function MyfxbookSettings() {
         </div>
       </Row>
     </section>
+  );
+}
+
+function ScrapperTestButton({ baseUrl }: { baseUrl: string }) {
+  const [busy, setBusy] = useState(false);
+  return (
+    <Button
+      variant="outline"
+      disabled={busy || !baseUrl}
+      onClick={async () => {
+        setBusy(true);
+        try {
+          const s = await createScrapperClient(baseUrl).getStatus();
+          toast.success(`Scrapper API connected (${s.provider})`);
+        } catch (err) {
+          toast.error(`Could not reach the Scrapper API: ${(err as Error).message}`);
+        } finally {
+          setBusy(false);
+        }
+      }}
+    >
+      {busy ? "Testing…" : "Test connection"}
+    </Button>
   );
 }
 

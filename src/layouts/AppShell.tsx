@@ -39,7 +39,7 @@ function StatusPill({ label, value, ok }: { label: string; value: string; ok: bo
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: status } = useQuery(apiStatusQuery());
-  const simulationMode = useSettingsStore((s) => s.simulationMode);
+  const directMode = useSettingsStore((s) => s.directMode);
 
   return (
     <div className="min-h-screen bg-background">
@@ -52,7 +52,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
           </div>
           <span className="rounded border border-sim-foreground/40 bg-sim/50 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-widest text-sim-foreground">
-            {simulationMode ? "Simulation · real calendar" : "Live API"}
+            {directMode ? "Direct feed · real data" : "Scrapper API"}
           </span>
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <StatusPill label="Feed" value={status?.scraperConnected ? "FF + MetalsMine" : "Offline"} ok={Boolean(status?.scraperConnected)} />
@@ -99,9 +99,9 @@ export function AppShell({ children }: { children: ReactNode }) {
           <footer className="border-t border-border px-4 py-4 text-xs text-muted-foreground lg:px-6">
             <div className="flex items-center gap-2">
               <Activity className="size-3.5" aria-hidden />
-              {simulationMode
-                ? "Simulation mode — calendar events are real (Forex Factory + MetalsMine) and the XAUUSD price is live (Binance PAXG/USDT); only simulated releases are local what-ifs. Not advice."
-                : "Live API mode — data comes from your scrapper server. Not advice."}
+              {directMode
+                ? "Direct feed — calendar (Forex Factory + MetalsMine), XAUUSD price (Binance PAXG/USDT) and news are real; only what-if releases are local. Not advice."
+                : "Scrapper API mode — data comes from your scrapper server. Not advice."}
             </div>
           </footer>
         </div>

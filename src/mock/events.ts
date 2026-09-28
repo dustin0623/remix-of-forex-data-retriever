@@ -1,7 +1,7 @@
 import type { EconomicEvent, EventChange, EventSource } from "@/types/market";
 
 /**
- * SIMULATED DATA ONLY.
+ * SAMPLE DATA ONLY.
  * Nothing in this folder touches the network. Shapes mirror the
  * Forex Factory calendar rows the /scrapper service will return later,
  * so swapping this module for real API calls requires no UI changes.
