@@ -52,7 +52,7 @@ function Dashboard() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Real Forex Factory + MetalsMine calendar and live gold price (Binance PAXG/USDT). Try what-if releases from any event page."
+        description="Real Forex Factory + MetalsMine calendar and live XAU/USD spot gold price. Try what-if releases from any event page."
         actions={<SourceTag label="Direct feed · real data" />}
       />
 
@@ -166,7 +166,7 @@ function Dashboard() {
         <section className="panel">
           <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-3">
             <h2 className="text-sm font-semibold">XAUUSD market timeline (24h)</h2>
-            <span className="text-xs text-muted-foreground">Binance PAXG/USDT</span>
+            <span className="text-xs text-muted-foreground">XAU/USD spot · 15m</span>
           </div>
           <MarketTimeline points={timeline.data} loading={timeline.isLoading} />
         </section>

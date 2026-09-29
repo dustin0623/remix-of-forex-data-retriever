@@ -106,7 +106,7 @@ function GoldPage() {
           label="XAUUSD"
           value={snapshot.data ? snapshot.data.price.toFixed(2) : "—"}
           tone="gold"
-          hint="Live · Binance PAXG/USDT"
+          hint="Live · XAU/USD spot"
           loading={snapshot.isLoading}
         />
         <StatCard
