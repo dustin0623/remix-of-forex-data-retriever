@@ -165,14 +165,72 @@ let cache: CalendarPayload | null = null;
 let cacheAt = 0;
 let inflight: Promise<CalendarPayload> | null = null;
 
+export interface HtmlActual {
+  currency: string;
+  title: string;
+  actual: string;
+  outcome: "better" | "worse" | null;
+}
+
+const decode = (s: string) =>
+  s.replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&#0?39;|&apos;/g, "'").replace(/&quot;/g, '"');
+
+/** Parses released actuals (in page order) from the Forex Factory calendar HTML. */
+export function parseActualsHtml(html: string): HtmlActual[] {
+  const out: HtmlActual[] = [];
+  for (const row of html.split(/<tr[^>]*class="calendar__row/).slice(1)) {
+    const act = /calendar__actual">\s*<span class="([^"]*)">([^<]+)<\/span>/.exec(row);
+    const cur = /calendar__currency">\s*([A-Z]{3})\s*</.exec(row);
+    const title = /calendar__event-title">([^<]+)</.exec(row);
+    if (!act || !cur || !title) continue;
+    const cls = act[1] ?? "";
+    out.push({
+      currency: cur[1]!,
+      title: clean(decode(title[1]!)),
+      actual: clean(decode(act[2]!)),
+      outcome: cls.includes("better") ? "better" : cls.includes("worse") ? "worse" : null,
+    });
+  }
+  return out;
+}
+
+async function fetchActualsHtml(): Promise<HtmlActual[]> {
+  const res = await fetch("https://www.forexfactory.com/calendar?week=this", {
+    headers: {
+      accept: "text/html",
+      "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36",
+    },
+    signal: AbortSignal.timeout(12_000),
+  });
+  if (!res.ok) throw new Error(`forexfactory html HTTP ${res.status}`);
+  return parseActualsHtml(await res.text());
+}
+
+/** Attaches HTML actuals to events matched by currency+title, in chronological order. */
+export function applyActuals(events: EconomicEvent[], actuals: HtmlActual[]): EconomicEvent[] {
+  const queues = new Map<string, HtmlActual[]>();
+  for (const a of actuals) {
+    const k = `${a.currency}|${a.title.toLowerCase()}`;
+    queues.set(k, [...(queues.get(k) ?? []), a]);
+  }
+  return events.map((e) => {
+    if (e.actual) return e;
+    const q = queues.get(`${e.currency}|${e.title.toLowerCase()}`);
+    const a = q?.shift();
+    return a ? { ...e, actual: a.actual, actualOutcome: a.outcome, status: "RELEASED" as const } : e;
+  });
+}
+
 async function scrape(): Promise<CalendarPayload> {
-  const [ff, mm] = await Promise.allSettled([fetchFeed("forexfactory"), fetchFeed("metalsmine")]);
+  const [ff, mm, html] = await Promise.allSettled([fetchFeed("forexfactory"), fetchFeed("metalsmine"), fetchActualsHtml()]);
   const ok = { forexfactory: ff.status === "fulfilled", metalsmine: mm.status === "fulfilled" };
   if (!ok.forexfactory && !ok.metalsmine) {
     const reason = ff.status === "rejected" ? String(ff.reason) : "unknown";
     throw new Error(`Both calendar feeds failed: ${reason}`);
   }
-  const events = mergeFeeds(ff.status === "fulfilled" ? ff.value : [], mm.status === "fulfilled" ? mm.value : []);
+  if (html.status === "rejected") console.warn("[calendar] actuals enrichment failed", html.reason);
+  const merged = mergeFeeds(ff.status === "fulfilled" ? ff.value : [], mm.status === "fulfilled" ? mm.value : []);
+  const events = html.status === "fulfilled" ? applyActuals(merged, html.value) : merged;
   return {
     events,
     meta: {

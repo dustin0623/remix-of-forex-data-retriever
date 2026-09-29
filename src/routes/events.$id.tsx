@@ -94,7 +94,19 @@ function EventDetails() {
         <p className="text-sm text-foreground/90">{event.description}</p>
 
         <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Field label="Actual" value={actual ?? "Not released"} />
+          <Field
+            label="Actual"
+            value={
+              actual ? (
+                <span className={event.actualOutcome === "better" ? "text-bull" : event.actualOutcome === "worse" ? "text-bear" : ""}>
+                  {actual}
+                  {event.actualOutcome ? ` · ${event.actualOutcome} than forecast` : ""}
+                </span>
+              ) : (
+                "Not released"
+              )
+            }
+          />
           <Field label="Forecast" value={event.forecast ?? "—"} />
           <Field label="Previous" value={event.previous ?? "—"} />
           <Field label="Status" value={event.status} />
