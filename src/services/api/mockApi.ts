@@ -104,10 +104,9 @@ export const mockApi: MarketApi = {
   getEvent: (id) => wrap(() => sim.getEvent(id)),
   getChanges: () => wrap(() => sim.getChanges()),
   getMarketAnalysis: (subject) => ensureBaseline().then(() => aiGoldAnalysis(subject)),
-  getMarketSnapshot: () =>
-    ensureBaseline().then(() => realSnapshot(sim.getTodayEvents()).catch(() => sim.getMarketSnapshot())),
-  getMarketTimeline: () =>
-    ensureBaseline().then(() => realTimeline(sim.getChanges()).catch(() => sim.getMarketTimeline())),
+  // Never fall back to synthetic prices: a failed feed surfaces as an error state.
+  getMarketSnapshot: () => ensureBaseline().then(() => realSnapshot(sim.getTodayEvents())),
+  getMarketTimeline: () => ensureBaseline().then(() => realTimeline(sim.getChanges())),
   getStatus: () =>
     ensureBaseline().then(() => {
       const cfg = currentAiConfig();

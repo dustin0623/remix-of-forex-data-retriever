@@ -89,9 +89,11 @@ function Dashboard() {
       <section className="panel p-5">
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-sm font-semibold">Today's market overview</h2>
-          <span className="text-xs text-muted-foreground">Live price · Binance PAXG/USDT</span>
+          <span className="text-xs text-muted-foreground">Live XAU/USD spot · refreshes every 30s</span>
         </div>
-        {snapshot.isLoading || !snap ? (
+        {snapshot.isError && !snap ? (
+          <p className="mt-4 text-sm text-bear">Gold price is unavailable right now. Retrying automatically.</p>
+        ) : snapshot.isLoading || !snap ? (
           <Skeleton className="mt-4 h-20 w-full" />
         ) : (
           <dl className="mt-4 grid gap-5 sm:grid-cols-2 xl:grid-cols-6">
