@@ -26,6 +26,8 @@ export interface EconomicEvent {
   /** UPCOMING until an actual is published; UPDATED after any later revision. */
   status: EventStatus;
   actual: string | null;
+  /** Forex Factory's colouring of the actual vs forecast. */
+  actualOutcome?: "better" | "worse" | null;
   forecast: string | null;
   previous: string | null;
   goldRelevance: Relevance;

@@ -92,7 +92,12 @@ export function EventsTable({
                 <td
                   className={cn(
                     "num px-3 py-2 text-right",
-                    actual ? "font-medium text-foreground" : "text-muted-foreground/60",
+                    actual
+                      ? cn(
+                          "font-medium",
+                          event.actualOutcome === "better" ? "text-bull" : event.actualOutcome === "worse" ? "text-bear" : "text-foreground",
+                        )
+                      : "text-muted-foreground/60",
                   )}
                 >
                   {actual ?? "—"}
