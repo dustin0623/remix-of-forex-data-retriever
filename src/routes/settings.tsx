@@ -73,7 +73,7 @@ function SettingsPage() {
       />
 
       <section className="panel px-5 py-1">
-        <Row title="Data source" description="Direct feed pulls Forex Factory + MetalsMine, Binance and news straight from this app. Scrapper API reads the same data from your server.">
+        <Row title="Data source" description="Direct feed pulls Forex Factory + MetalsMine, gold spot price and news straight from this app. Scrapper API reads the same data from your server.">
           <Select value={dataSource} onValueChange={(v) => { setDataSource(v as "direct" | "live"); toast.success(v === "live" ? "Switched to Scrapper API" : "Switched to Direct feed"); }}>
             <SelectTrigger aria-label="Data source"><SelectValue /></SelectTrigger>
             <SelectContent>
